@@ -1,4 +1,4 @@
-//src/pages/Admin/index.tsx
+//src/pages/Admin/index.tsx (SL_SC_05)
 
 function Admin() {
 

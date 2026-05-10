@@ -1,4 +1,4 @@
-//src/pages/Settings/FontSize/index.tsx
+//src/pages/Settings/FontSize/index.tsx (SL_SC_04)
 
 function FontSize(){
   return(
