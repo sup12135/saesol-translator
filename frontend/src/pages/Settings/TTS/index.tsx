@@ -2,7 +2,7 @@
 
 import TTSSkeleton from "./TTSSkeleton";
 
-function Settings() {
+function TTS() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', overflow: 'hidden' }}>
       <TTSSkeleton />
@@ -10,4 +10,4 @@ function Settings() {
   );
 }
 
-export default Settings;
+export default TTS;
