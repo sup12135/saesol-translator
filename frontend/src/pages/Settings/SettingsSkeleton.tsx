@@ -1,3 +1,5 @@
+//src/pages/Settings/SettingsSkeleton.tsx
+
 import React from 'react';
 
 
