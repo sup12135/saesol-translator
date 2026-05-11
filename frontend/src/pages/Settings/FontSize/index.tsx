@@ -1,9 +1,13 @@
-//src/pages/Settings/FontSize/index.tsx
+//src/pages/Settings/FontSize/index.tsx (SL_SC_04)
 
-function FontSize(){
-  return(
-    <h1>FontSize :)</h1>
-  )
+import FontSizeSkeleton from "./FontSizeSkeleton";
+
+function FontSize() {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', overflow: 'hidden' }}>
+      <FontSizeSkeleton />
+    </div>
+  );
 }
 
 export default FontSize;
