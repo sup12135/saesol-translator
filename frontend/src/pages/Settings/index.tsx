@@ -1,4 +1,4 @@
-//src/pages/Settings/index.tsx
+//src/pages/Settings/index.tsx (SL_SC_02)
 
 function Settings(){
   return(
