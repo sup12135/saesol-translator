@@ -1,9 +1,7 @@
+// src/pages/Settings/FontSize/FontSizeSkeleton.tsx
+
 import React from 'react';
 
-/**
- * SL_SC_04: 글자 크기 설정 화면 스켈레톤 UI (프레임 제거 버전)
- * - 큰 테두리 네모를 없애고 요소들을 배경에 직접 배치
- */
 function FontSizeSkeleton() {
   const colors = {
     background: '#f5f5f5',

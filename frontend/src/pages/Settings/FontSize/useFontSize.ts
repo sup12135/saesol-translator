@@ -1,3 +1,5 @@
+// src/pages/Settings/FontSize/useFontSize.ts
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -32,11 +34,6 @@ export const useFontSize = () => {
     setFontSize(numValue);
   };
 
-  /**
-   * [예외 처리 및 홀수 버그 수정] 
-   * 1. 24~80px 범위 보정
-   * 2. 홀수 입력 시 가장 가까운 짝수로 보정
-   */
   const handleInputBlur = () => {
     let correctedValue = fontSize;
 
