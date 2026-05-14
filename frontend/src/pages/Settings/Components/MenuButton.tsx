@@ -13,7 +13,7 @@ const MenuButton = ({ label, onClick }: MenuButtonProps) => (
     style={{ 
       height: '350px', 
       borderRadius: '12px', 
-      backgroundColor: '#ffffff', 
+      backgroundColor: '#ADDFF1', 
       fontSize: '2rem', 
       cursor: 'pointer',
       border: '1px solid #ddd'
