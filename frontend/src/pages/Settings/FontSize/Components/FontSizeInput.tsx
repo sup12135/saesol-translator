@@ -17,7 +17,7 @@ export const FontSizeInput = ({ value, onChange, onBlur }: any) => (
 
 const inputWrapper: React.CSSProperties = {
   width: '200px',
-  height: '280px', // 미리보기 박스와 높이 통일
+  height: '280px', 
   backgroundColor: '#FFFFFF',
   borderRadius: '24px',
   display: 'flex',

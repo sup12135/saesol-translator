@@ -17,7 +17,7 @@ const buttonStyle: React.CSSProperties = {
   width: '140px',
   height: '140px',
   borderRadius: '35px',
-  backgroundColor: '#ADDFF1', // 지정 색상
+  backgroundColor: '#ADDFF1', 
   border: 'none',
   cursor: 'pointer',
   display: 'flex',

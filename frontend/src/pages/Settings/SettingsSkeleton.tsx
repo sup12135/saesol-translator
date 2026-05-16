@@ -21,7 +21,7 @@ function SettingsSkeleton() {
       {/* 상단바 영역: 왼쪽과 중앙을 비우고 오른쪽 X 버튼만 배치 */}
       <div style={{ 
         display: 'flex',
-        justifyContent: 'flex-end', // 모든 요소를 오른쪽으로 밀어냄
+        justifyContent: 'flex-end', 
         padding: '40px 60px 20px 60px' 
       }}>
         {/* 우측 상단 X 버튼 공간: btn_back_to_main 대응  */}
