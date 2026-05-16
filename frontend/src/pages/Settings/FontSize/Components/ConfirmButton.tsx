@@ -15,8 +15,8 @@ const confirmBtnStyle: React.CSSProperties = {
   width: '320px',
   height: '75px',
   borderRadius: '20px',
-  backgroundColor: '#CDE6EF', // 지정 색상
-  color: '#434343',           // 화살표와 동일한 다크 그레이로 통일감
+  backgroundColor: '#CDE6EF',
+  color: '#434343',          
   fontSize: '22px',
   fontWeight: '700',
   border: 'none',

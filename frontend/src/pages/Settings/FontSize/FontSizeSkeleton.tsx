@@ -5,9 +5,9 @@ import React from 'react';
 function FontSizeSkeleton() {
   const colors = {
     background: '#f5f5f5',
-    primaryGray: '#e0e0e0',  // 일반 박스
-    secondaryGray: '#d0d0d0', // 버튼/강조 박스
-    darkGray: '#bcbcbc'       // 아이콘/내부 요소
+    primaryGray: '#e0e0e0',  
+    secondaryGray: '#d0d0d0', 
+    darkGray: '#bcbcbc'       
   };
 
   const roundButtonStyle: React.CSSProperties = {
