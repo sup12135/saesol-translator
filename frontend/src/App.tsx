@@ -5,7 +5,7 @@ import Home from "./pages/Home";
 import Admin from "./pages/Admin";
 import FontSize from "./pages/Settings/FontSize";
 import Settings from "./pages/Settings";
-import TTS from "./pages/Settings/TTS";
+import TTS from "./pages/Settings/TTS"
 import Header from "./components/Header";
 
 function App() {
@@ -15,9 +15,9 @@ function App() {
     <Header />
       <Routes>
         <Route path='/' element={<Home />}/>
-        <Route path='/admin' element={<Admin />}/>
-        <Route path='/fontsize' element={<FontSize />}/>
-        <Route path="Settings" element={<Settings />}/>
+        <Route path='/Admin' element={<Admin />}/>
+        <Route path='/Fontsize' element={<FontSize />}/>
+        <Route path="/Settings" element={<Settings />}/>
         <Route path ='/TTS' element={<TTS />}/>
       </Routes>
     </BrowserRouter>

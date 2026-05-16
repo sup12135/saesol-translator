@@ -1,30 +1,30 @@
-//src/components/Header/index.tsx
-
-import { Link } from 'react-router-dom';
-
-//페이지 전환 경로 데이터 정의
-const NAV_ITEMS = [
-  { name: '홈', path: '/'},
-  { name: '관리자', path: '/Admin'},
-  { name: '설정', path: '/Settings'},
-  { name: '폰트크기', path: '/FontSize'},
-  { name: '음성안내(TTS)', path: '/TTS'},
-];
-
+// src/components/Header/index.tsx
+import HeaderTitle from './HeaderTitle';
+import Navigation from './Navigation';
+import HeaderButtons from './HeaderButton'
 const Header = () => {
-  return(
-    <header>
-      <nav>
-        <ul style={{ display: 'flex', listStyle: 'none', gap: '20px', padding: 0}}>
-          {NAV_ITEMS.map((item) => (
-            <li key={item.path}>
-              <Link to={item.path}>{item.name}</Link>
-            </li>
-          ))}
-        </ul>
-      </nav>
+  return (
+    <header
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        zIndex: 1000,
+        backgroundColor: '#ADDFF1',
+        height: '80.67px',
+        width: '100%',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '0 20px',
+        boxSizing: 'border-box',
+      }}
+    >
+      <HeaderTitle />
+      <Navigation />
+      <HeaderButtons />
     </header>
-  )
-}
+  );
+};
 
 export default Header;
