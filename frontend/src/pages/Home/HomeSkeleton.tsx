@@ -12,7 +12,7 @@ function HomeSkeleton() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
       
-      {/* 1. 메인 콘텐츠 영역 (CameraView 스켈레톤) [cite: 12, 16] */}
+      {/* 1. 메인 콘텐츠 영역 (CameraView 스켈레톤) */}
       <main style={{
         flex: 1,
         display: 'flex',
@@ -25,7 +25,7 @@ function HomeSkeleton() {
         <div id="cam_stream_view" style={{
           width: '100%',
           maxWidth: '1000px',
-          aspectRatio: '16 / 9',
+          aspectRatio: '4 / 3',
           backgroundColor: '#ccc',
           borderRadius: '12px',
           display: 'flex',
@@ -37,7 +37,7 @@ function HomeSkeleton() {
         </div>
       </main>
 
-      {/* 2. 하단 자막 영역 (SubtitleArea 스켈레톤) [cite: 13, 16] */}
+      {/* 2. 하단 자막 영역 (SubtitleArea 스켈레톤) */}
       <footer style={{
         height: '160px',
         padding: '20px 40px',
