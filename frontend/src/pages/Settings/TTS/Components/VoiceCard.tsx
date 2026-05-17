@@ -1,3 +1,5 @@
+//src/pages/Settings/TTS/Components/VoiceCard.tsx
+
 interface VoiceCardProps {
   id: string;
   label: string;

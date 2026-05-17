@@ -3,7 +3,8 @@
 import { useNavigate } from 'react-router-dom';
 import TTSSkeleton from './TTSSkeleton';
 import { useTTSSetting } from './useTTSSetting';
-import { TTSHeader, TTSFooter } from './Components/TTSLayout';
+import { TTSHeader } from './Components/TTSHeader';
+import { TTSFooter } from './Components/TTSFooter';
 import { VoiceSelector } from './Components/VoiceSelector';
 
 function TTSSettingPage() {

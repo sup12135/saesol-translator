@@ -1,27 +1,34 @@
-export const TTSHeader = ({ onBack }: { onBack: () => void }) => (
-  <header style={{ display: 'flex', justifyContent: 'flex-end', padding: '40px 60px 20px' }}>
-    <button 
-      onClick={onBack}
-      style={{ width: '48px', height: '48px', border: 'none', borderRadius: '8px', backgroundColor: '#fff', cursor: 'pointer' }}
-    >
-      ✕
-    </button>
-  </header>
-);
+//src/pages/Settings/TTS/Components/TTSLayout.tsx
 
-export const TTSFooter = ({ onConfirm, disabled }: { onConfirm: () => void, disabled: boolean }) => (
-  <footer style={{ padding: '40px 60px', display: 'flex', justifyContent: 'center' }}>
-    <button 
-      id="btn_tts_confirm"
-      onClick={onConfirm}
-      disabled={disabled}
-      style={{ 
-        width: '100%', maxWidth: '400px', height: '60px', borderRadius: '12px', border: 'none',
-        color: '#fff', fontWeight: 'bold', cursor: disabled ? 'not-allowed' : 'pointer',
-        backgroundColor: disabled ? '#d0d0d0' : '#007bff'
-      }}
-    >
-      설정 완료
-    </button>
-  </footer>
-);
+import { TTSHeader } from './TTSHeader'
+import { TTSGenderSelection } from './TTSGenderSelection'
+import { TTSFooter } from './TTSFooter'
+
+interface TTSLayoutProps {
+  onBack: () => void;
+  onConfirm: () => void;
+  disabled: boolean;
+  selectedGender: 'male' | 'female' | null;
+  onSelectGender: (gender: 'male' | 'female') => void;
+}
+
+export const TTSLayout = ({ 
+  onBack, 
+  onConfirm, 
+  disabled, 
+  selectedGender, 
+  onSelectGender 
+}: TTSLayoutProps) => {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+      <TTSHeader onBack={onBack} />
+      
+      {/* 이 사이에 메인 콘텐츠나 카메라 컴포넌트가 들어갈 수 있어요 */}
+      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+        <TTSGenderSelection selectedGender={selectedGender} onSelectGender={onSelectGender} />
+      </main>
+
+      <TTSFooter onConfirm={onConfirm} disabled={disabled} />
+    </div>
+  );
+};

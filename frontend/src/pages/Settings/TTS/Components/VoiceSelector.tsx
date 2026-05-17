@@ -1,3 +1,5 @@
+//src/pages/Settings/TTS/Components/VoiceSelect.tsx
+
 import { VoiceCard } from './VoiceCard';
 
 interface VoiceSelectorProps {
