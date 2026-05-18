@@ -17,17 +17,17 @@ export const useFontSize = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  // [설계 준수] +2 증감 및 최대 80px 제한 [cite: 103, 107]
+  // [설계 준수] +2 증감 및 최대 80px 제한
   const handleIncrease = () => {
     if (fontSize < 80) setFontSize((prev) => prev + 2);
   };
 
-  // [설계 준수] -2 증감 및 최소 24px 제한 [cite: 103, 107]
+  // [설계 준수] -2 증감 및 최소 24px 제한
   const handleDecrease = () => {
     if (fontSize > 24) setFontSize((prev) => prev - 2);
   };
 
-  // [설계 준수] 숫자 외 입력 방지 [cite: 108, 112]
+  // [설계 준수] 숫자 외 입력 방지
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/[^0-9]/g, ''); 
     const numValue = value === '' ? 0 : Number(value);
@@ -37,7 +37,7 @@ export const useFontSize = () => {
   const handleInputBlur = () => {
     let correctedValue = fontSize;
 
-    // 범위 보정 [cite: 111]
+    // 범위 보정 
     if (correctedValue < 24) {
       correctedValue = 24;
     } else if (correctedValue > 80) {
@@ -52,9 +52,16 @@ export const useFontSize = () => {
     setFontSize(correctedValue);
   };
 
-  // [설계 준수] 로컬 스토리지 저장 및 이동 [cite: 109, 118]
-  const handleConfirm = () => {
+  // [설계 준수] 로컬 스토리지 저장 및 이동
+const handleConfirm = () => {
     localStorage.setItem('app-font-size', fontSize.toString());
+    
+    // Custom Event를 발생시켜 현재 창의 다른 컴포넌트들에게 알림
+    const event = new Event('font-size-changed');
+    window.dispatchEvent(event);
+    
+    // 설계서상 설정 완료 후 이동 경로는 메인(/) 또는 설정(/settings)
+    // Home으로 바로 반영 확인을 위해 navigate('/')로 변경 가능
     navigate('/settings'); 
   };
 

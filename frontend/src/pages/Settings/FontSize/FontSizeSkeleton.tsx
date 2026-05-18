@@ -27,7 +27,7 @@ function FontSizeSkeleton() {
     }}>
       {/* 1. 상단/좌측 고정 요소 (X 버튼 및 타이틀) */}
       <div style={{ 
-        padding: '40px 60px',
+        padding: '150px 100px 20px',
         display: 'flex',
         justifyContent: 'flex-end',
         alignItems: 'flex-start'
