@@ -9,7 +9,7 @@ interface SettingsViewProps {
 
 const SettingsView = ({ onNavigate }: SettingsViewProps) => {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', backgroundColor: '#f5f5f5' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', backgroundColor: '#f5f5f5' }}>
       {/* TTSHeader의 스타일과 동일하게 수정 */}
       <header style={{ display: 'flex', justifyContent: 'flex-end', padding: '150px 100px 20px' }}>
         <button 
