@@ -31,5 +31,5 @@ const triangleStyle = (dir: 'top' | 'bottom'): React.CSSProperties => ({
   height: '0',
   borderLeft: '22px solid transparent',
   borderRight: '22px solid transparent',
-  [dir === 'top' ? 'borderTop' : 'borderBottom']: '34px solid #434343', // 지정 화살표 색상
+  [dir === 'top' ? 'borderTop' : 'borderBottom']: '34px solid #434343',
 });
