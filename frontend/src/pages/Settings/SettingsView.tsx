@@ -1,6 +1,7 @@
 //src/pages/Settings/SettingsView.tsx
 
 import MenuButton from './Components/MenuButton';
+import { AiOutlineClose } from 'react-icons/ai';
 
 interface SettingsViewProps {
   onNavigate: (path: string) => void;
@@ -9,8 +10,24 @@ interface SettingsViewProps {
 const SettingsView = ({ onNavigate }: SettingsViewProps) => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', backgroundColor: '#f5f5f5' }}>
-      <header style={{ display: 'flex', justifyContent: 'flex-end', padding: '40px 60px 20px' }}>
-        <button onClick={() => onNavigate('/')} style={{ width: '48px', height: '48px' }}>X</button>
+      {/* TTSHeader의 스타일과 동일하게 수정 */}
+      <header style={{ display: 'flex', justifyContent: 'flex-end', padding: '150px 100px 20px' }}>
+        <button 
+          onClick={() => onNavigate('/')} 
+          style={{ 
+            width: '48px', 
+            height: '48px',
+            border: 'none',
+            borderRadius: '8px',
+            backgroundColor: '#CDE6EF',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}
+        >
+          <AiOutlineClose size={24} color="#333333" />
+        </button>
       </header>
       
       <main style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '0 60px' }}>

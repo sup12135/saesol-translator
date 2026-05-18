@@ -22,7 +22,7 @@ function SettingsSkeleton() {
       <div style={{ 
         display: 'flex',
         justifyContent: 'flex-end', 
-        padding: '40px 60px 20px 60px' 
+        padding: '150px 100px 20px' 
       }}>
         {/* 우측 상단 X 버튼 공간: btn_back_to_main 대응  */}
         <div style={{ 
