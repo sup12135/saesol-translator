@@ -23,7 +23,7 @@ function TTSSkeleton() {
         display: 'flex', 
         justifyContent: 'flex-end', 
         alignItems: 'center', 
-        padding: '40px 60px 20px 60px' 
+        padding: '150px 100px 20px' 
       }}>
         {/* 중앙 타이틀: 음성 설정 */}
         {/* <div style={{ width: '200px', height: '40px' }}></div> */}

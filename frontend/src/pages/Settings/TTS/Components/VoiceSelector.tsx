@@ -1,5 +1,6 @@
 //src/pages/Settings/TTS/Components/VoiceSelect.tsx
 
+import { IoIosMan, IoIosWoman } from 'react-icons/io';
 import { VoiceCard } from './VoiceCard';
 
 interface VoiceSelectorProps {
@@ -16,12 +17,14 @@ export function VoiceSelector({ selectedVoice, onSelect }: VoiceSelectorProps) {
           label="남성 목소리"
           isSelected={selectedVoice === 'male'}
           onSelect={() => onSelect('male')}
+          icon={<IoIosMan size={48} />} // 원하는 크기로 size 조절 가능해
         />
         <VoiceCard 
           id="btn_tts_female"
           label="여성 목소리"
           isSelected={selectedVoice === 'female'}
           onSelect={() => onSelect('female')}
+          icon={<IoIosWoman size={48} />} // 원하는 크기로 size 조절 가능해
         />
       </div>
     </main>

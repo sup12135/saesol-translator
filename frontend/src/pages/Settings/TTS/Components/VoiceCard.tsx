@@ -5,9 +5,10 @@ interface VoiceCardProps {
   label: string;
   isSelected: boolean;
   onSelect: () => void;
+  icon?: React.ReactNode; 
 }
 
-export function VoiceCard({ id, label, isSelected, onSelect }: VoiceCardProps) {
+export function VoiceCard({ id, label, isSelected, onSelect, icon }: VoiceCardProps) {
   return (
     <div 
       id={id}
@@ -19,7 +20,21 @@ export function VoiceCard({ id, label, isSelected, onSelect }: VoiceCardProps) {
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'
       }}
     >
-      <div style={{ width: '100px', height: '100px', borderRadius: '50%', backgroundColor: '#e0e0e0', marginBottom: '20px' }} />
+      <div style={{ 
+        width: '100px', 
+        height: '100px', 
+        borderRadius: '50%', 
+        backgroundColor: 'transparent', 
+        border: '2px solid #ccc',
+        marginBottom: '20px',
+        display: 'flex',       
+        alignItems: 'center',
+        justifyContent: 'center',
+        color: '#555'          
+      }}>
+        {icon}
+      </div>
+      
       <span style={{ fontWeight: 'bold', fontSize: '1.2rem' }}>{label}</span>
     </div>
   );

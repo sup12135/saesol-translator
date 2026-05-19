@@ -20,7 +20,7 @@ function FontSizeSkeleton() {
       display: 'flex', 
       flexDirection: 'column', 
       height: '100vh', 
-      width: '100%', 
+      width: '100vw', 
       backgroundColor: colors.background,
       overflow: 'hidden',
       position: 'relative'
