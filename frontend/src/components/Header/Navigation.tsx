@@ -1,27 +1,29 @@
-// src/components/Header/Navigation.tsx
-import { Link } from 'react-router-dom';
+// // src/components/Header/Navigation.tsx
+// //페이지 이동의 편의를 위한 상단바
 
-const NAV_ITEMS = [
-  { name: '홈', path: '/' },
-  { name: '설정', path: '/Settings' },
-  { name: '폰트크기', path: '/FontSize' },
-  { name: '음성안내(TTS)', path: '/TTS' },
-];
+// import { Link } from 'react-router-dom';
 
-const Navigation = () => {
-  return (
-    <nav>
-      <ul style={{ display: 'flex', listStyle: 'none', gap: '20px', padding: 0, margin: 0 }}>
-        {NAV_ITEMS.map((item) => (
-          <li key={item.path}>
-            <Link to={item.path} style={{ textDecoration: 'none', color: '#333', fontWeight: '500' }}>
-              {item.name}
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </nav>
-  );
-};
+// const NAV_ITEMS = [
+//   { name: '홈', path: '/' },
+//   { name: '설정', path: '/Settings' },
+//   { name: '폰트크기', path: '/FontSize' },
+//   { name: '음성안내(TTS)', path: '/TTS' },
+// ];
 
-export default Navigation;
+// const Navigation = () => {
+//   return (
+//     <nav>
+//       <ul style={{ display: 'flex', listStyle: 'none', gap: '20px', padding: 0, margin: 0 }}>
+//         {NAV_ITEMS.map((item) => (
+//           <li key={item.path}>
+//             <Link to={item.path} style={{ textDecoration: 'none', color: '#333', fontWeight: '500' }}>
+//               {item.name}
+//             </Link>
+//           </li>
+//         ))}
+//       </ul>
+//     </nav>
+//   );
+// };
+
+// export default Navigation;
