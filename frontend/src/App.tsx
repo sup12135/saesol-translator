@@ -2,7 +2,6 @@
 
 import {Route, BrowserRouter, Routes} from "react-router-dom";
 import Home from "./pages/Home";
-import Admin from "./pages/Admin";
 import FontSize from "./pages/Settings/FontSize";
 import Settings from "./pages/Settings";
 import TTS from "./pages/Settings/TTS"
@@ -15,7 +14,6 @@ function App() {
     <Header />
       <Routes>
         <Route path='/' element={<Home />}/>
-        <Route path='/Admin' element={<Admin />}/>
         <Route path='/Fontsize' element={<FontSize />}/>
         <Route path="/Settings" element={<Settings />}/>
         <Route path ='/TTS' element={<TTS />}/>
