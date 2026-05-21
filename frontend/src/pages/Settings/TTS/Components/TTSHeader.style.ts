@@ -1,18 +1,6 @@
-// src/pages/Settings/SettingsView.style.ts
+// src/pages/Settings/TTS/Components/TTSHeader.style.ts
 
 export const styles = {
-  container: {
-    display: 'flex',
-    flexDirection: 'column',
-    height: '100vh',
-    width: '100vw',
-    backgroundColor: '#f8f9fa',
-    
-    padding: '160px 60px 70px 60px', // 위, 오른쪽, 아래, 왼쪽
-    
-    boxSizing: 'border-box',
-  } as const,
-
   header: {
     display: 'flex',
     justifyContent: 'space-between',
@@ -54,22 +42,5 @@ export const styles = {
     justifyContent: 'center',
     boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
     transition: 'all 0.2s ease',
-  } as const,
-
-  main: {
-    flex: 1,
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: '100%',
-    marginTop: '-20px',
-  } as const,
-
-  menuGrid: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-    gap: '30px',
-    width: '100%',
-    maxWidth: '1000px',
   } as const,
 };

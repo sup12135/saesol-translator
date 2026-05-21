@@ -1,28 +1,20 @@
-//src/pages/Settings/TTS/Components/TTSHeader.tsx
+// src/pages/Settings/TTS/Components/TTSHeader.tsx
 
 import { AiOutlineClose } from 'react-icons/ai';
+import { styles } from './TTSHeader.style';
 
 interface TTSHeaderProps {
   onBack: () => void;
 }
 
 export const TTSHeader = ({ onBack }: TTSHeaderProps) => (
-  <header style={{ display: 'flex', justifyContent: 'flex-end', padding: '150px 100px 20px' }}>
-    <button 
-      onClick={onBack}
-      style={{ 
-        width: '48px', 
-        height: '48px', 
-        border: 'none', 
-        borderRadius: '8px', 
-        backgroundColor: '#CDE6EF', 
-        cursor: 'pointer',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center'
-      }}
-    >
-      <AiOutlineClose size={24} color="#333333" />
+  <header style={styles.header}>
+    <div style={styles.titleBadge}>
+      <span style={styles.titleText}>음성 설정 화면</span>
+    </div>
+
+    <button onClick={onBack} style={styles.closeButton}>
+      <AiOutlineClose size={26} color="#495057" />
     </button>
   </header>
 );
