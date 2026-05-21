@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 
 const NAV_ITEMS = [
   { name: '홈', path: '/' },
-  { name: '관리자', path: '/Admin' },
   { name: '설정', path: '/Settings' },
   { name: '폰트크기', path: '/FontSize' },
   { name: '음성안내(TTS)', path: '/TTS' },
