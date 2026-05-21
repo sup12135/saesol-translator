@@ -23,7 +23,6 @@ export const TTSLayout = ({
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <TTSHeader onBack={onBack} />
       
-      {/* 이 사이에 메인 콘텐츠나 카메라 컴포넌트가 들어갈 수 있어요 */}
       <main style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
         <TTSGenderSelection selectedGender={selectedGender} onSelectGender={onSelectGender} />
       </main>

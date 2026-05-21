@@ -1,6 +1,6 @@
 // src/components/Header/index.tsx
 import HeaderTitle from './HeaderTitle';
-import Navigation from './Navigation';
+// import Navigation from './Navigation';
 import HeaderButtons from './HeaderButton'
 const Header = () => {
   return (
@@ -21,7 +21,7 @@ const Header = () => {
       }}
     >
       <HeaderTitle />
-      <Navigation />
+      {/* <Navigation /> */}
       <HeaderButtons />
     </header>
   );

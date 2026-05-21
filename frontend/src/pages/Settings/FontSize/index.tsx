@@ -1,4 +1,4 @@
-//src/pages/Settings/FontSize/index.tsx (SL_SC_04)
+// src/pages/Settings/FontSize/index.tsx (SL_SC_04)
 
 import React from 'react';
 import { useFontSize } from './useFontSize';
@@ -12,35 +12,46 @@ import FontSizeSkeleton from "./FontSizeSkeleton";
 function FontSize() {
   const { 
     fontSize, isLoading, handleIncrease, handleDecrease, 
-    handleInputChange, handleInputBlur, handleConfirm, navigate 
+    handleInputChange, handleInputBlur, handleConfirm 
   } = useFontSize();
 
   if (isLoading) return <FontSizeSkeleton />;
 
   return (
-    <div style={pageLayout}>
-      <FontSizeHeader onBack={() => navigate('/Settings')} />
+    <div 
+      style={{ 
+        display: 'flex', 
+        flexDirection: 'column', 
+        height: '100vh', 
+        width: '100vw', 
+        backgroundColor: '#f8f9fa', // 통일된 소프트 화이트
+        padding: '160px 60px 70px 60px', // 공통 헤더 완벽 대응
+        boxSizing: 'border-box',
+        overflow: 'hidden' 
+      }}
+    >
+      {/* 완벽하게 가로줄 정렬선이 일치하는 헤더 */}
+      <FontSizeHeader onBack={() => handleConfirm()} />
 
-      <main style={mainStyle}>
-        <div style={configContainer}>
+      {/* 중앙 메인 컨텐츠 영역 */}
+      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', width: '100%', marginTop: '-20px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '40px', width: '100%', maxWidth: '1000px', justifyContent: 'center' }}>
           <FontSizePreview fontSize={fontSize} />
+          
           <FontSizeInput 
             value={fontSize} 
             onChange={handleInputChange} 
             onBlur={handleInputBlur} 
           />
+          
           <ControlButtons onUp={handleIncrease} onDown={handleDecrease} />
         </div>
-
-        <ConfirmButton onClick={handleConfirm} />
       </main>
-      <footer style={{ height: '100px' }} />
+
+      {/* 하단 공통 규격 완료 버튼 */}
+      <ConfirmButton onClick={handleConfirm} />
     </div>
   );
 }
-
-const pageLayout: React.CSSProperties = { display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', backgroundColor: '#f5f5f5', overflow: 'hidden' };
-const mainStyle: React.CSSProperties = { flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: '60px' };
-const configContainer: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: '30px' };
 
 export default FontSize;

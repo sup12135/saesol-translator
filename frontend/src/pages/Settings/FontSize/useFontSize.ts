@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { correctFontSize } from './FontSizeUtiles'
 
 export const useFontSize = () => {
   const navigate = useNavigate();
@@ -34,34 +35,19 @@ export const useFontSize = () => {
     setFontSize(numValue);
   };
 
+  // 포커스 아웃 시 유틸 함수를 통해 보정 처리
   const handleInputBlur = () => {
-    let correctedValue = fontSize;
-
-    // 범위 보정 
-    if (correctedValue < 24) {
-      correctedValue = 24;
-    } else if (correctedValue > 80) {
-      correctedValue = 80;
-    }
-
-    // 홀수 판별 및 짝수 보정
-    if (correctedValue % 2 !== 0) {
-      correctedValue = correctedValue + 1 > 80 ? correctedValue - 1 : correctedValue + 1;
-    }
-
-    setFontSize(correctedValue);
+    setFontSize(correctFontSize(fontSize));
   };
 
   // [설계 준수] 로컬 스토리지 저장 및 이동
-const handleConfirm = () => {
+  const handleConfirm = () => {
     localStorage.setItem('app-font-size', fontSize.toString());
     
     // Custom Event를 발생시켜 현재 창의 다른 컴포넌트들에게 알림
     const event = new Event('font-size-changed');
     window.dispatchEvent(event);
     
-    // 설계서상 설정 완료 후 이동 경로는 메인(/) 또는 설정(/settings)
-    // Home으로 바로 반영 확인을 위해 navigate('/')로 변경 가능
     navigate('/settings'); 
   };
 

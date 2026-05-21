@@ -1,12 +1,12 @@
-//src/pages/Settings/SettingsSkeleton.tsx
+// src/pages/Settings/SettingsSkeleton.tsx
 
 import React from 'react';
 
-
 function SettingsSkeleton() {
-  const boxStyle: React.CSSProperties = {
-    backgroundColor: '#e0e0e0',
-    borderRadius: '12px'
+  const skeletonColors = {
+    background: '#f8f9fa',   // 변경된 메인 배경색 통일
+    grayElement: '#e9ecef',  // 은은한 스켈레톤 기본 회색
+    darkElement: '#dee2e6',  // 조금 더 진한 회색 포인트
   };
 
   return (
@@ -15,38 +15,46 @@ function SettingsSkeleton() {
       flexDirection: 'column', 
       height: '100vh', 
       width: '100vw', 
-      backgroundColor: '#f5f5f5',
+      backgroundColor: skeletonColors.background,
+      padding: '160px 60px 70px 60px', // 실제 화면과 동일한 공통 헤더 안전 여백
+      boxSizing: 'border-box',
       overflow: 'hidden'
     }}>
-      {/* 상단바 영역: 왼쪽과 중앙을 비우고 오른쪽 X 버튼만 배치 */}
+      {/* 상단바 영역: 실물 디자인과 가로선 정렬 통일 */}
       <div style={{ 
-        display: 'flex',
-        justifyContent: 'flex-end', 
-        padding: '150px 100px 20px', 
-        alignItems: 'flex-start'
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        width: '100%',
+        maxWidth: '1000px',
+        margin: '0 auto',
+        paddingBottom: '20px'
       }}>
-        {/* 우측 상단 X 버튼 공간: btn_back_to_main 대응  */}
+        {/* 왼쪽 '환경 설정 화면' 배지용 스켈레톤 */}
         <div style={{ 
-          width: '48px', 
+          width: '180px', 
           height: '48px', 
-          borderRadius: '8px', 
-          backgroundColor: '#d0d0d0',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center'
-        }}>
-          {/* X 모양 플레이스홀더  */}
-          <div style={{ width: '20px', height: '20px', backgroundColor: '#bcbcbc' }}></div>
-        </div>
+          borderRadius: '30px', 
+          backgroundColor: skeletonColors.grayElement 
+        }} />
+
+        {/* 오른쪽 원형 닫기 버튼용 스켈레톤 (56px) */}
+        <div style={{ 
+          width: '56px', 
+          height: '56px', 
+          borderRadius: '50%', 
+          backgroundColor: skeletonColors.darkElement 
+        }} />
       </div>
 
-      {/* 중앙 메뉴 선택 영역 [cite: 42, 43] */}
+      {/* 중앙 메뉴 카드 영역 */}
       <main style={{ 
         flex: 1, 
         display: 'flex', 
         justifyContent: 'center', 
         alignItems: 'center', 
-        padding: '0 60px' 
+        width: '100%',
+        marginTop: '-20px'
       }}>
         <div style={{ 
           display: 'grid', 
@@ -55,38 +63,37 @@ function SettingsSkeleton() {
           width: '100%', 
           maxWidth: '1000px' 
         }}>
-          {/* 음성 설정 버튼 영역: btn_nav_tts  */}
-          <div id="btn_nav_tts" style={{ 
-            ...boxStyle, 
+          {/* 음성 설정 버튼 플레이스홀더 */}
+          <div style={{ 
             height: '350px', 
-            display: 'flex', 
-            flexDirection: 'column', 
-            padding: '40px',
+            borderRadius: '12px', 
+            backgroundColor: skeletonColors.grayElement,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
             gap: '20px'
           }}>
-            <div style={{ width: '80px', height: '80px', borderRadius: '50%', backgroundColor: '#d0d0d0' }}></div>
-            <div style={{ width: '60%', height: '32px', backgroundColor: '#d0d0d0' }}></div>
-            <div style={{ width: '100%', height: '20px', backgroundColor: '#d0d0d0' }}></div>
+            <div style={{ width: '64px', height: '64px', borderRadius: '50%', backgroundColor: skeletonColors.darkElement }} />
+            <div style={{ width: '140px', height: '32px', borderRadius: '6px', backgroundColor: skeletonColors.darkElement }} />
           </div>
 
-          {/* 글자 크기 버튼 영역: btn_nav_font  */}
-          <div id="btn_nav_font" style={{ 
-            ...boxStyle, 
+          {/* 글자 크기 버튼 플레이스홀더 */}
+          <div style={{ 
             height: '350px', 
-            display: 'flex', 
-            flexDirection: 'column', 
-            padding: '40px',
+            borderRadius: '12px', 
+            backgroundColor: skeletonColors.grayElement,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
             gap: '20px'
           }}>
-            <div style={{ width: '80px', height: '80px', borderRadius: '50%', backgroundColor: '#d0d0d0' }}></div>
-            <div style={{ width: '60%', height: '32px', backgroundColor: '#d0d0d0' }}></div>
-            <div style={{ width: '100%', height: '20px', backgroundColor: '#d0d0d0' }}></div>
+            <div style={{ width: '64px', height: '64px', borderRadius: '50%', backgroundColor: skeletonColors.darkElement }} />
+            <div style={{ width: '140px', height: '32px', borderRadius: '6px', backgroundColor: skeletonColors.darkElement }} />
           </div>
         </div>
       </main>
-
-      {/* 하단 여백  */}
-      <footer style={{ height: '80px' }}></footer>
     </div>
   );
 }

@@ -1,4 +1,6 @@
-//src/pages/Settings/TTS/Components/TTSFooter.tsx
+// src/pages/Settings/TTS/Components/TTSFooter.tsx
+
+import { styles } from './TTSFooter.style';
 
 interface TTSFooterProps {
   onConfirm: () => void;
@@ -6,15 +8,17 @@ interface TTSFooterProps {
 }
 
 export const TTSFooter = ({ onConfirm, disabled }: TTSFooterProps) => (
-  <footer style={{ padding: '40px 60px', display: 'flex', justifyContent: 'center' }}>
+  <footer style={styles.footer}>
     <button 
       id="btn_tts_confirm"
       onClick={onConfirm}
       disabled={disabled}
       style={{ 
-        width: '100%', maxWidth: '400px', height: '60px', borderRadius: '12px', border: 'none',
-        color: '#333333', fontWeight: 'bold', cursor: disabled ? 'not-allowed' : 'pointer',
-        backgroundColor: disabled ? '#d0d0d0' : '#CDE6EF'
+        ...styles.confirmButton,
+        color: disabled ? '#aaaaaa' : '#2b4c59', 
+        cursor: disabled ? 'not-allowed' : 'pointer',
+        backgroundColor: disabled ? '#e9ecef' : '#CDE6EF',
+        boxShadow: disabled ? 'none' : '0 4px 12px rgba(205, 230, 239, 0.4)'
       }}
     >
       설정 완료

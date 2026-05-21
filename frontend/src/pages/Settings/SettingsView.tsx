@@ -1,7 +1,8 @@
-//src/pages/Settings/SettingsView.tsx
+// src/pages/Settings/SettingsView.tsx
 
 import MenuButton from './Components/MenuButton';
-import { AiOutlineClose } from 'react-icons/ai';
+import { AiOutlineClose, AiFillSound, AiOutlineFontSize } from 'react-icons/ai';
+import { styles } from './SettingsView.style';
 
 interface SettingsViewProps {
   onNavigate: (path: string) => void;
@@ -9,34 +10,38 @@ interface SettingsViewProps {
 
 const SettingsView = ({ onNavigate }: SettingsViewProps) => {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', backgroundColor: '#f5f5f5' }}>
-      {/* TTSHeader의 스타일과 동일하게 수정 */}
-      <header style={{ display: 'flex', justifyContent: 'flex-end', padding: '150px 100px 20px' }}>
-        <button 
-          onClick={() => onNavigate('/')} 
-          style={{ 
-            width: '48px', 
-            height: '48px',
-            border: 'none',
-            borderRadius: '8px',
-            backgroundColor: '#CDE6EF',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}
-        >
-          <AiOutlineClose size={24} color="#333333" />
+    <div style={styles.container}>
+      
+      {/* 상단 뼈대 라인 */}
+      <header style={styles.header}>
+        <div style={styles.titleBadge}>
+          <span style={styles.titleText}>환경 설정 화면</span>
+        </div>
+
+        <button onClick={() => onNavigate('/')} style={styles.closeButton}>
+          <AiOutlineClose size={26} color="#495057" />
         </button>
       </header>
       
-      <main style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '0 60px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px', width: '100%', maxWidth: '1000px' }}>
-          <MenuButton label="음성 설정" onClick={() => onNavigate('/TTS')} />
-          <MenuButton label="글자 크기" onClick={() => onNavigate('/FontSize')} />
+      {/* 중앙 메인 컨텐츠 영역 */}
+      <main style={styles.main}>
+        <div style={styles.menuGrid}>
+          
+          <MenuButton 
+            label="음성 설정" 
+            onClick={() => onNavigate('/TTS')} 
+            icon={<AiFillSound size={64} color="#2b4c59" />} // 아이콘 크기를 약간 키워 확실한 테마 전달
+          />
+
+          <MenuButton 
+            label="글자 크기" 
+            onClick={() => onNavigate('/FontSize')} 
+            icon={<AiOutlineFontSize size={64} color="#2b4c59" />} 
+          />
+
         </div>
       </main>
-      <footer style={{ height: '80px' }} />
+
     </div>
   );
 };
