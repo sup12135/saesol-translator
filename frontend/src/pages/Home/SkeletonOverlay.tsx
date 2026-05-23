@@ -3,9 +3,6 @@
 import { useEffect, useRef } from 'react';
 import type { OpenPoseData, Keypoint } from '../../hooks/useMediaPipe';
 
-// 키포인트 담당자 가이드:
-// 부모 컴포넌트(Home/index.tsx)로부터 실시간 데이터(예: [{x, y, visibility}, ...])를 
-// keypointsData Props로 전달받도록 설계되어 있습니다.
 interface SkeletonOverlayProps {
   keypointsRef?: React.RefObject<OpenPoseData | null>; 
 }
@@ -28,10 +25,6 @@ const LINE_WIDTH = {
   POSE: 2,
   HAND: 2,
 } as const;
-
-// ─────────────────────────────────────────
-// 드로잉 유틸
-// ─────────────────────────────────────────
 
 const drawPoint = (
   ctx: CanvasRenderingContext2D,
@@ -61,10 +54,7 @@ const drawLine = (
   ctx.stroke();
 };
 
-// ─────────────────────────────────────────
-// 각 파트 드로잉 함수
-// ─────────────────────────────────────────
-
+// Pose 드로잉
 const drawPose = (
   ctx: CanvasRenderingContext2D,
   pose: (Keypoint | null)[],
@@ -87,6 +77,7 @@ const drawPose = (
   });
 };
 
+// Face 드로잉
 const drawFace = (
   ctx: CanvasRenderingContext2D,
   face: Record<string, (Keypoint | null)[]>,
@@ -101,6 +92,7 @@ const drawFace = (
   });
 };
 
+// Hand 드로잉
 const drawHand = (
   ctx: CanvasRenderingContext2D,
   hand: Keypoint[],
