@@ -3,13 +3,15 @@
 import { useCameraStream } from "../../hooks/UseCameraStream";
 
 interface CameraViewProps {
+  videoRef: React.RefObject<HTMLVideoElement | null>;
+  streamRef: React.RefObject<MediaStream | null>;
   isMonitoring: boolean;
   onLoaded: () => void;
 }
 
-const CameraView = ({ isMonitoring, onLoaded }: CameraViewProps) => {
+const CameraView = ({ videoRef, streamRef, isMonitoring, onLoaded }: CameraViewProps) => {
   // 커스텀 훅으로 카메라 스트림 로직 주입
-  const { videoRef, errorMsg } = useCameraStream({ isMonitoring, onLoaded });
+  const { errorMsg } = useCameraStream({ videoRef, streamRef, isMonitoring, onLoaded });
 
   return (
     <div style={styles.container}>

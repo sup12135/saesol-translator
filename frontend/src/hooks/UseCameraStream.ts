@@ -1,14 +1,15 @@
 // src/hooks/useCameraStream.ts
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 interface UseCameraStreamProps {
+  videoRef: React.RefObject<HTMLVideoElement | null>;
+  streamRef: React.RefObject<MediaStream | null>;
   isMonitoring: boolean;
   onLoaded: () => void;
 }
 
-export const useCameraStream = ({ isMonitoring, onLoaded }: UseCameraStreamProps) => {
-  const videoRef = useRef<HTMLVideoElement>(null);
+export const useCameraStream = ({ videoRef, streamRef, isMonitoring, onLoaded }: UseCameraStreamProps) => {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
@@ -23,6 +24,9 @@ export const useCameraStream = ({ isMonitoring, onLoaded }: UseCameraStreamProps
           video: true,
           audio: false 
         });
+        
+        // 외부 ref에 스트림 저장
+        streamRef.current = stream;
 
         if (videoRef.current) {
           // 비디오 태그에 스트림 연결
@@ -41,11 +45,9 @@ export const useCameraStream = ({ isMonitoring, onLoaded }: UseCameraStreamProps
     }
 
     return () => {
-      if (stream) {
-        stream.getTracks().forEach((track) => track.stop()); 
-      }
+      streamRef.current?.getTracks().forEach((track) => track.stop());
     };
   }, [isMonitoring, onLoaded]);
 
-  return { videoRef, errorMsg };
+  return { errorMsg };
 };

@@ -1,16 +1,124 @@
 // src/pages/Home/SkeletonOverlay.tsx
 
 import { useEffect, useRef } from 'react';
+import type { OpenPoseData, Keypoint } from '../../hooks/useMediaPipe';
 
-// 키포인트 담당자 가이드:
-// 부모 컴포넌트(Home/index.tsx)로부터 실시간 데이터(예: [{x, y, visibility}, ...])를 
-// keypointsData Props로 전달받도록 설계되어 있습니다.
 interface SkeletonOverlayProps {
-  keypointsData?: any; 
+  keypointsRef?: React.RefObject<OpenPoseData | null>; 
 }
 
-const SkeletonOverlay = ({ keypointsData }: SkeletonOverlayProps) => {
+const COLOR = {
+  POSE_POINT: 'rgb(0, 255, 0)',
+  POSE_LINE: 'rgb(0, 100, 255)',
+  FACE_POINT: 'rgb(255, 255, 255)',
+  HAND_POINT: 'rgb(255, 0, 0)',
+  HAND_LINE: 'rgb(0, 255, 0)',
+} as const;
+
+const POINT_RADIUS = {
+  POSE: 5,
+  FACE: 2,
+  HAND: 4,
+} as const;
+
+const LINE_WIDTH = {
+  POSE: 2,
+  HAND: 2,
+} as const;
+
+const drawPoint = (
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  radius: number,
+  color: string
+) => {
+  ctx.beginPath();
+  ctx.arc(x, y, radius, 0, 2 * Math.PI);
+  ctx.fillStyle = color;
+  ctx.fill();
+};
+
+const drawLine = (
+  ctx: CanvasRenderingContext2D,
+  x1: number, y1: number,
+  x2: number, y2: number,
+  color: string,
+  lineWidth: number
+) => {
+  ctx.beginPath();
+  ctx.moveTo(x1, y1);
+  ctx.lineTo(x2, y2);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = lineWidth;
+  ctx.stroke();
+};
+
+// Pose 드로잉
+const drawPose = (
+  ctx: CanvasRenderingContext2D,
+  pose: (Keypoint | null)[],
+  connections: [number, number][],
+  w: number,
+  h: number
+) => {
+  // 연결선 먼저 (점 아래에 깔리도록)
+  connections.forEach(([i1, i2]) => {
+    const p1 = pose[i1];
+    const p2 = pose[i2];
+    if (!p1 || !p2) return;
+    drawLine(ctx, p1.x * w, p1.y * h, p2.x * w, p2.y * h, COLOR.POSE_LINE, LINE_WIDTH.POSE);
+  });
+
+  // 관절 점
+  pose.forEach((kp) => {
+    if (!kp) return;
+    drawPoint(ctx, kp.x * w, kp.y * h, POINT_RADIUS.POSE, COLOR.POSE_POINT);
+  });
+};
+
+// Face 드로잉
+const drawFace = (
+  ctx: CanvasRenderingContext2D,
+  face: Record<string, (Keypoint | null)[]>,
+  w: number,
+  h: number
+) => {
+  Object.values(face).forEach((partPoints) => {
+    partPoints.forEach((kp) => {
+      if (!kp) return;
+      drawPoint(ctx, kp.x * w, kp.y * h, POINT_RADIUS.FACE, COLOR.FACE_POINT);
+    });
+  });
+};
+
+// Hand 드로잉
+const drawHand = (
+  ctx: CanvasRenderingContext2D,
+  hand: Keypoint[],
+  connections: [number, number][],
+  w: number,
+  h: number
+) => {
+  if (hand.length === 0) return;
+
+  // 연결선
+  connections.forEach(([i1, i2]) => {
+    const p1 = hand[i1];
+    const p2 = hand[i2];
+    if (!p1 || !p2) return;
+    drawLine(ctx, p1.x * w, p1.y * h, p2.x * w, p2.y * h, COLOR.HAND_LINE, LINE_WIDTH.HAND);
+  });
+
+  // 관절 점
+  hand.forEach((kp) => {
+    drawPoint(ctx, kp.x * w, kp.y * h, POINT_RADIUS.HAND, COLOR.HAND_POINT);
+  });
+};
+
+const SkeletonOverlay = ({ keypointsRef }: SkeletonOverlayProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const animFrameRef = useRef<number | null>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -19,61 +127,42 @@ const SkeletonOverlay = ({ keypointsData }: SkeletonOverlayProps) => {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // 하위 캔버스의 그리기 해상도를 상위 element 레이아웃 크기와 1:1로 동기화
-    canvas.width = canvas.clientWidth;
-    canvas.height = canvas.clientHeight;
+    const draw = () => {
+      if (!keypointsRef) return;
 
-    // 실시간 드로잉을 위해 매 프레임마다 이전 그림 싹 지우기
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+      // 캔버스 해상도를 레이아웃 크기와 동기화
+      if (
+        canvas.width !== canvas.clientWidth ||
+        canvas.height !== canvas.clientHeight
+      ) {
+        canvas.width = canvas.clientWidth;
+        canvas.height = canvas.clientHeight;
+      }
 
-    // =======================================================
-    // [키포인트 구현부] 수어 인식 모델/프론트 담당자 구현 영역
-    // =======================================================
-    if (keypointsData) {
-      /*
-        -------------------------------------------------------
-        💡 [팀원 가이드] 여기에 실시간 캔버스 드로잉 로직을 작성하시면 됩니다!
-        -------------------------------------------------------
-        밑바닥 CameraView 컴포넌트에 거울 모드(scaleX(-1))가 적용되어 있어서,
-        이 Canvas 엘리먼트에도 동일하게 CSS로 scaleX(-1) 처리가 되어 있습니다.
-        
-        따라서 가져오시는 좌표 데이터(API/웹소켓)가 '이미 좌우 반전이 된 데이터'라면 
-        그리기 전에 캔버스 너비(canvas.width) 기준 반전 연산이 필요할 수 있습니다.
+      // 실시간 드로잉을 위해 매 프레임마다 이전 그림 지우기
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        [예시 코드 스니펫]
-        
-        1. 점(관절) 그리기 예시:
-        keypointsData.landmarks?.forEach((point: any) => {
-          // 영상 크기에 맞게 좌표 스케일링 (0~1 사이 정규화 데이터일 경우)
-          const x = point.x * canvas.width;
-          const y = point.y * canvas.height;
+      const data = keypointsRef.current;
+      if (data) {
+        const w = canvas.width;
+        const h = canvas.height;
 
-          ctx.beginPath();
-          ctx.arc(x, y, 5, 0, 2 * Math.PI);
-          ctx.fillStyle = '#00ff88'; // 가시성 좋은 형광 그린 추천
-          ctx.fill();
-        });
+        // 드로잉 순서: Pose → Face → Hand
+        drawPose(ctx, data.pose, data.poseConnections, w, h);
+        drawFace(ctx, data.face, w, h);
+        drawHand(ctx, data.leftHand, data.handConnections, w, h);
+        drawHand(ctx, data.rightHand, data.handConnections, w, h);
+      }
 
-        2. 선(뼈대) 연결 예시:
-        if (keypointsData.connections) {
-          ctx.strokeStyle = '#00ffff'; // 시안(하늘색) 선
-          ctx.lineWidth = 3;
-          
-          keypointsData.connections.forEach(([p1_idx, p2_idx]: number[]) => {
-            const p1 = keypointsData.landmarks[p1_idx];
-            const p2 = keypointsData.landmarks[p2_idx];
-            
-            if (p1 && p2) {
-              ctx.beginPath();
-              ctx.moveTo(p1.x * canvas.width, p1.y * canvas.height);
-              ctx.lineTo(p2.x * canvas.width, p2.y * canvas.height);
-              ctx.stroke();
-            }
-          });
-        }
-      */
-    }
-  }, [keypointsData]);
+      animFrameRef.current = requestAnimationFrame(draw);
+    };
+
+    animFrameRef.current = requestAnimationFrame(draw);
+
+    return () => {
+      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+    };
+  }, []);
 
   return (
     <canvas
