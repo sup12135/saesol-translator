@@ -1,7 +1,6 @@
 // src/pages/Home/SubtitleArea.tsx
 
-import { useFontSize } from '../../hooks/UseFontSize';
-
+import { useFontSize } from '../../../hooks/UseFontSize'
 interface SubtitleAreaProps {
   translatedText?: string;
   systemMsg?: string;
