@@ -1,6 +1,5 @@
 // src/pages/Settings/FontSize/Components/ControlButtons.tsx
 
-import React from 'react';
 import { styles, triangleStyle } from './ControlButtons.style'
 
 export const ControlButtons = ({ onUp, onDown }: { onUp: () => void; onDown: () => void }) => (

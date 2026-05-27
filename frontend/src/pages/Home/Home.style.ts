@@ -27,6 +27,10 @@ export const styles = {
   videoContainer: {
     position: 'relative',
     width: '100%',
-    maxWidth: '1000px',
+    height: '100%',
+    minHeight: 0,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
   } as const,
 };

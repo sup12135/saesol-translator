@@ -25,10 +25,18 @@ function Home() {
   const { isLoading, handleCameraLoaded } = useHomeLoading(200);
 
   // useRecorder: streamRef로 녹화, update로 매 프레임 손 감지 여부 전달
-  const { update, stop } = useRecorder(streamRef);
+  const { update, stop, status } = useRecorder({
+    streamRef,
+    videoRef,
+    outputOrientation: 'auto',
+  });
 
   // useMediaPipe: onFrame 콜백으로 매 프레임 update 호출
-  const { keypointsRef } = useMediaPipe(videoRef, update);
+  const { keypointsRef } = useMediaPipe(videoRef, update, {
+    stabilizeHands: true,
+    faceZoomFallback: false,
+    maxFps: 20,
+  });
 
   // 컴포넌트 언마운트 시 진행 중인 녹화 강제 종료
   useEffect(() => {
@@ -62,8 +70,9 @@ function Home() {
               streamRef={streamRef}
               isMonitoring={true}
               onLoaded={handleCameraLoaded}
-          />
-            {showSkeleton && <SkeletonOverlay keypointsRef={keypointsRef} />}
+              recorderPhase={status.phase}
+            />
+            {showSkeleton && <SkeletonOverlay keypointsRef={keypointsRef} videoRef={videoRef} />}
           </div>
         </main>
         <SubtitleArea />

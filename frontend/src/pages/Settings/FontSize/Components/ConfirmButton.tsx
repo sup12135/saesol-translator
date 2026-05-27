@@ -1,6 +1,5 @@
 // src/pages/Settings/FontSize/Components/ConfirmButton.tsx
 
-import React from 'react';
 import { styles } from './ConfirmButton.style';
 
 export const ConfirmButton = ({ onClick }: { onClick: () => void }) => (
