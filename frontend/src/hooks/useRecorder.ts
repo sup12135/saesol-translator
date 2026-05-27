@@ -3,7 +3,12 @@
 import { useRef, useCallback, useState } from 'react';
 import type { OpenPoseData, Keypoint } from './useMediaPipe';
 
-const MIME_TYPE = 'video/webm;codecs=vp8';
+const MIME_CANDIDATES = [
+    'video/mp4;codecs=avc1.42E01E,mp4a.40.2',
+    'video/mp4',
+    'video/webm;codecs=vp8',
+    'video/webm',
+] as const;
 const BACKEND_URL = 'http://yungjin702.iptime.org:47100/request_sentence';
 
 const READY_HOLD_SEC = 0.5;
@@ -197,9 +202,20 @@ const resolveOutputSize = (
     return LANDSCAPE_SIZE;
 };
 
-const sendToBackend = async (videoBlob: Blob, keypoints: KeypointFrames) => {
+const getExtFromMimeType = (mimeType: string): string => {
+    return mimeType.includes('mp4') ? 'mp4' : 'webm';
+};
+
+const resolveRecorderMimeType = (): string => {
+    for (const mime of MIME_CANDIDATES) {
+        if (MediaRecorder.isTypeSupported(mime)) return mime;
+    }
+    return '';
+};
+
+const sendToBackend = async (videoBlob: Blob, keypoints: KeypointFrames, videoExt: string) => {
     const formData = new FormData();
-    formData.append('video', videoBlob, 'sign_video.webm');
+    formData.append('video', videoBlob, `sign_video.${videoExt}`);
     formData.append('keypoints', JSON.stringify(keypoints));
 
     try {
@@ -259,17 +275,21 @@ export const useRecorder = ({
         videoChunksRef.current = [];
         keypointFramesRef.current = [];
 
-        const mimeType = MediaRecorder.isTypeSupported(MIME_TYPE) ? MIME_TYPE : 'video/webm';
-        const recorder = new MediaRecorder(streamRef.current, { mimeType });
+        const resolvedMimeType = resolveRecorderMimeType();
+        const recorder = resolvedMimeType
+            ? new MediaRecorder(streamRef.current, { mimeType: resolvedMimeType })
+            : new MediaRecorder(streamRef.current);
+        const finalMimeType = resolvedMimeType || recorder.mimeType || 'video/webm';
+        const videoExt = getExtFromMimeType(finalMimeType);
 
         recorder.ondataavailable = (e) => {
             if (e.data.size > 0) videoChunksRef.current.push(e.data);
         };
 
         recorder.onstop = async () => {
-            const videoBlob = new Blob(videoChunksRef.current, { type: MIME_TYPE });
+            const videoBlob = new Blob(videoChunksRef.current, { type: finalMimeType });
             const interpolated = interpolateFrames(keypointFramesRef.current);
-            await sendToBackend(videoBlob, interpolated);
+            await sendToBackend(videoBlob, interpolated, videoExt);
             videoChunksRef.current = [];
             keypointFramesRef.current = [];
         };
