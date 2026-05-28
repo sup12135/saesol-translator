@@ -1,6 +1,5 @@
 // src/pages/Settings/FontSize/FontSizeSkeleton.tsx
 
-import React from 'react';
 
 function FontSizeSkeleton() {
   const skeletonColors = {

@@ -1,6 +1,5 @@
 // src/pages/Settings/FontSize/Components/FontSizeInput.tsx
 
-import React from 'react';
 import { styles } from './FontSizeInput.style'
 
 export const FontSizeInput = ({ value, onChange, onBlur }: any) => (

@@ -1,6 +1,5 @@
 // src/pages/Settings/TTS/TTSSkeleton.tsx
 
-import React from 'react';
 
 function TTSSkeleton() {
   const skeletonColors = {
