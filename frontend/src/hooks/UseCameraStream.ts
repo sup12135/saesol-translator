@@ -42,10 +42,20 @@ export const useCameraStream = ({ videoRef, streamRef, isMonitoring, onLoaded }:
 
     if (isMonitoring) {
       startCamera();
+    } else {
+      setErrorMsg(null);
+      if (videoRef.current) {
+        videoRef.current.srcObject = null;
+      }
+      streamRef.current = null;
     }
 
     return () => {
       streamRef.current?.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+      if (videoRef.current) {
+        videoRef.current.srcObject = null;
+      }
     };
   }, [isMonitoring, onLoaded]);
 

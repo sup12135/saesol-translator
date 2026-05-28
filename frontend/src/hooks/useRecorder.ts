@@ -9,7 +9,7 @@ const MIME_CANDIDATES = [
     'video/webm;codecs=vp8',
     'video/webm',
 ] as const;
-const BACKEND_URL = 'http://yungjin702.iptime.org:47100/request_sentence';
+export const BACKEND_URL = 'http://yungjin702.iptime.org:47100/request_sentence';
 
 const READY_HOLD_SEC = 0.5;
 const READY_MISS_GRACE_SEC = 0.35;
@@ -35,6 +35,7 @@ interface UseRecorderParams {
     streamRef: React.RefObject<MediaStream | null>;
     videoRef?: React.RefObject<HTMLVideoElement | null>;
     outputOrientation?: OutputOrientation;
+    onBackendResult?: (response: unknown) => void;
 }
 
 const PART_COUNT = {
@@ -47,7 +48,7 @@ const PART_COUNT = {
 const TOTAL_COLS = (PART_COUNT.face + PART_COUNT.pose + PART_COUNT.left + PART_COUNT.right) * 3;
 
 type KeypointRow = number[];
-type KeypointFrames = KeypointRow[];
+export type KeypointFrames = KeypointRow[];
 
 const percentile = (values: number[], p: number): number => {
     if (values.length === 0) return 0;
@@ -66,7 +67,7 @@ const asPointForMotion = (kp: Keypoint | null | undefined, w: number, h: number)
     return [kp.x * w, kp.y * h, kp.visibility ?? 1];
 };
 
-const extractRow = (data: OpenPoseData, outW: number, outH: number): KeypointRow => {
+export const extractKeypointRow = (data: OpenPoseData, outW: number, outH: number): KeypointRow => {
     const row: number[] = [];
 
     const facePoints = Object.values(data.face).flat();
@@ -119,7 +120,7 @@ const buildMotionVector = (data: OpenPoseData, outW: number, outH: number): [num
     return points;
 };
 
-const interpolateFrames = (frames: KeypointFrames): KeypointFrames => {
+export const interpolateFrames = (frames: KeypointFrames): KeypointFrames => {
     if (frames.length === 0) return [];
 
     const rowCount = frames.length;
@@ -189,7 +190,7 @@ const estimateMotionPx = (
     return percentile(dists, 0.9);
 };
 
-const resolveOutputSize = (
+export const resolveOutputSize = (
     mode: OutputOrientation,
     videoRef?: React.RefObject<HTMLVideoElement | null>
 ): [number, number] => {
@@ -213,10 +214,12 @@ const resolveRecorderMimeType = (): string => {
     return '';
 };
 
-const sendToBackend = async (videoBlob: Blob, keypoints: KeypointFrames, videoExt: string) => {
+export const sendToBackend = async (videoBlob: Blob, keypoints: KeypointFrames, videoExt: string) => {
     const formData = new FormData();
     formData.append('video', videoBlob, `sign_video.${videoExt}`);
-    formData.append('keypoints', JSON.stringify(keypoints));
+    const keypointsJson = JSON.stringify(keypoints);
+    const keypointsBlob = new Blob([keypointsJson], { type: 'application/json' });
+    formData.append('keypoints_file', keypointsBlob, 'keypoints.json');
 
     try {
         const response = await fetch(BACKEND_URL, { method: 'POST', body: formData });
@@ -232,6 +235,7 @@ export const useRecorder = ({
     streamRef,
     videoRef,
     outputOrientation = 'auto',
+    onBackendResult,
 }: UseRecorderParams) => {
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const videoChunksRef = useRef<Blob[]>([]);
@@ -289,7 +293,8 @@ export const useRecorder = ({
         recorder.onstop = async () => {
             const videoBlob = new Blob(videoChunksRef.current, { type: finalMimeType });
             const interpolated = interpolateFrames(keypointFramesRef.current);
-            await sendToBackend(videoBlob, interpolated, videoExt);
+            const response = await sendToBackend(videoBlob, interpolated, videoExt);
+            onBackendResult?.(response);
             videoChunksRef.current = [];
             keypointFramesRef.current = [];
         };
@@ -299,7 +304,7 @@ export const useRecorder = ({
         isRecordingRef.current = true;
         setPhase('recording');
         console.log('[Recorder] 녹화 시작');
-    }, [setPhase, streamRef]);
+    }, [onBackendResult, setPhase, streamRef]);
 
     const stopRecording = useCallback(() => {
         if (!isRecordingRef.current) return;
@@ -380,7 +385,7 @@ export const useRecorder = ({
         }
 
         if (isRecordingRef.current) {
-            keypointFramesRef.current.push(extractRow(keypointsData, outW, outH));
+            keypointFramesRef.current.push(extractKeypointRow(keypointsData, outW, outH));
         }
     }, [outputOrientation, resetReadyState, setPhase, startRecording, stopRecording, videoRef]);
 

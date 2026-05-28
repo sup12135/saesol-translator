@@ -6,6 +6,7 @@ import type { OpenPoseData, Keypoint } from '../../hooks/useMediaPipe';
 interface SkeletonOverlayProps {
   keypointsRef?: React.RefObject<OpenPoseData | null>; 
   videoRef: React.RefObject<HTMLVideoElement | null>;
+  mirrored?: boolean;
 }
 
 const COLOR = {
@@ -152,7 +153,7 @@ const drawHand = (
   });
 };
 
-const SkeletonOverlay = ({ keypointsRef, videoRef }: SkeletonOverlayProps) => {
+const SkeletonOverlay = ({ keypointsRef, videoRef, mirrored = true }: SkeletonOverlayProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animFrameRef = useRef<number | null>(null);
 
@@ -215,7 +216,7 @@ const SkeletonOverlay = ({ keypointsRef, videoRef }: SkeletonOverlayProps) => {
         width: '100%',
         height: '100%',
         pointerEvents: 'none', // 마우스 이벤트를 무시하고 비디오 클릭이 가능하도록 설정
-        transform: 'scaleX(-1)', // CameraView와 거울 모드 방향 일치
+        transform: mirrored ? 'scaleX(-1)' : 'none',
         zIndex: 10 // 비디오 요소보다 무조건 위에 배치
       }}
     />

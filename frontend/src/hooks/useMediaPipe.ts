@@ -1,7 +1,7 @@
 // src/hooks/useMediaPipe.ts
 // @mediapipe/tasks-vision 기반 (PoseLandmarker / FaceLandmarker / HandLandmarker)
 
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import {
     FilesetResolver,
     PoseLandmarker,
@@ -36,6 +36,13 @@ interface MediaPipeOptions {
     stabilizeHands?: boolean;
     faceZoomFallback?: boolean;
     maxFps?: number;
+}
+
+interface DetectCurrentFrameOptions {
+    enforceInterval?: boolean;
+    skipDuplicateVideoTime?: boolean;
+    emitCallback?: boolean;
+    sourceVideo?: HTMLVideoElement | null;
 }
 
 type HandSide = 'Left' | 'Right';
@@ -189,9 +196,14 @@ export const useMediaPipe = (
     videoRef: React.RefObject<HTMLVideoElement | null>,
     onFrame?: (data: OpenPoseData) => void,
     options?: MediaPipeOptions
-): { keypointsRef: React.RefObject<OpenPoseData | null> } => {
+): {
+    keypointsRef: React.MutableRefObject<OpenPoseData | null>;
+    isModelReady: boolean;
+    detectCurrentFrame: (options?: DetectCurrentFrameOptions) => OpenPoseData | null;
+} => {
     const keypointsRef = useRef<OpenPoseData | null>(null);
     const isReadyRef = useRef(false);
+    const [isModelReady, setIsModelReady] = useState(false);
     const onFrameRef = useRef(onFrame);
     const prevLeftWristRef = useRef<Keypoint | null>(null);
     const prevRightWristRef = useRef<Keypoint | null>(null);
@@ -202,14 +214,14 @@ export const useMediaPipe = (
 
     const stabilizeHandsEnabled = options?.stabilizeHands ?? true;
     const faceZoomFallbackEnabled = options?.faceZoomFallback ?? true;
-    const maxFps = options?.maxFps ?? 20;
+    const maxFps = options?.maxFps ?? 30;
     const minInferIntervalMs = Math.max(1, Math.floor(1000 / maxFps));
 
     const poseLandmarkerRef = useRef<PoseLandmarker | null>(null);
     const faceLandmarkerRef = useRef<FaceLandmarker | null>(null);
     const handLandmarkerRef = useRef<HandLandmarker | null>(null);
     const animFrameRef = useRef<number | null>(null);
-    const lastVideoTimeRef = useRef<number>(-1);
+    const lastVideoTimeMapRef = useRef<WeakMap<HTMLVideoElement, number>>(new WeakMap());
 
     useEffect(() => {
         onFrameRef.current = onFrame;
@@ -217,17 +229,17 @@ export const useMediaPipe = (
 
     // ── Task 초기화 ──
     useEffect(() => {
-        const initTasks = async () => {
+        const createLandmarkers = async (delegateName: 'GPU' | 'CPU') => {
             const vision = await FilesetResolver.forVisionTasks(
                 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision/wasm'
             );
 
-            const [pose, face, hand] = await Promise.all([
+            return Promise.all([
                 PoseLandmarker.createFromOptions(vision, {
                     baseOptions: {
                         modelAssetPath:
                             'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task',
-                        delegate: 'CPU',
+                        delegate: delegateName,
                     },
                     runningMode: 'VIDEO',
                     numPoses: 1,
@@ -237,7 +249,7 @@ export const useMediaPipe = (
                     baseOptions: {
                         modelAssetPath:
                             'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task',
-                        delegate: 'CPU',
+                        delegate: delegateName,
                     },
                     runningMode: 'VIDEO',
                     numFaces: 1,
@@ -249,17 +261,32 @@ export const useMediaPipe = (
                     baseOptions: {
                         modelAssetPath:
                             'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task',
-                        delegate: 'CPU',
+                        delegate: delegateName,
                     },
                     runningMode: 'VIDEO',
                     numHands: 2,
                 }),
             ]);
+        };
+
+        const initTasks = async () => {
+            let pose: PoseLandmarker;
+            let face: FaceLandmarker;
+            let hand: HandLandmarker;
+            try {
+                [pose, face, hand] = await createLandmarkers('GPU');
+                console.log('[useMediaPipe] GPU delegate enabled');
+            } catch (gpuErr) {
+                console.warn('[useMediaPipe] GPU delegate init failed, fallback to CPU:', gpuErr);
+                [pose, face, hand] = await createLandmarkers('CPU');
+                console.log('[useMediaPipe] CPU delegate enabled');
+            }
 
             poseLandmarkerRef.current = pose;
             faceLandmarkerRef.current = face;
             handLandmarkerRef.current = hand;
             isReadyRef.current = true;
+            setIsModelReady(true);
         };
 
         initTasks().catch((err) =>
@@ -268,6 +295,8 @@ export const useMediaPipe = (
 
         // 클린업
         return () => {
+            isReadyRef.current = false;
+            setIsModelReady(false);
             if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
             poseLandmarkerRef.current?.close();
             faceLandmarkerRef.current?.close();
@@ -275,25 +304,34 @@ export const useMediaPipe = (
         };
     }, []);
 
-    // 매 프레임 감지 루프
-    const detect = useCallback(() => {
+    const detectCurrentFrame = useCallback((options?: DetectCurrentFrameOptions): OpenPoseData | null => {
         try {
-            const video = videoRef.current;
+            const video = options?.sourceVideo ?? videoRef.current;
+            const enforceInterval = options?.enforceInterval ?? false;
+            const skipDuplicateVideoTime = options?.skipDuplicateVideoTime ?? false;
+            const emitCallback = options?.emitCallback ?? true;
+
             if (
                 !video ||
                 !isReadyRef.current ||
-                video.readyState < 2 ||                      // 아직 프레임 없음
-                video.currentTime === lastVideoTimeRef.current // 같은 프레임 중복 방지
+                video.readyState < 2 // 아직 프레임 없음
             ) {
-                return;
+                return null;
+            }
+
+            if (skipDuplicateVideoTime) {
+                const lastVideoTime = lastVideoTimeMapRef.current.get(video);
+                if (lastVideoTime === video.currentTime) {
+                    return null;
+                }
             }
 
             const nowMs = performance.now();
-            if (nowMs - lastInferMsRef.current < minInferIntervalMs) {
-                return;
+            if (enforceInterval && nowMs - lastInferMsRef.current < minInferIntervalMs) {
+                return null;
             }
             lastInferMsRef.current = nowMs;
-            lastVideoTimeRef.current = video.currentTime;
+            lastVideoTimeMapRef.current.set(video, video.currentTime);
             const timestamp = nowMs;
 
             const poseResult = poseLandmarkerRef.current?.detectForVideo(video, timestamp);
@@ -396,17 +434,32 @@ export const useMediaPipe = (
             };
 
             keypointsRef.current = result;
-            onFrameRef.current?.(result);
+            if (emitCallback) {
+                onFrameRef.current?.(result);
+            }
+            return result;
         } catch (err) {
             const now = performance.now();
             if (now - lastLoopErrorLogMsRef.current > 2000) {
                 lastLoopErrorLogMsRef.current = now;
                 console.error('[useMediaPipe] detect 루프 오류:', err);
             }
+            return null;
+        }
+    }, [faceZoomFallbackEnabled, stabilizeHandsEnabled, minInferIntervalMs, videoRef]);
+
+    // 매 프레임 감지 루프
+    const detect = useCallback(() => {
+        try {
+            detectCurrentFrame({
+                enforceInterval: true,
+                skipDuplicateVideoTime: true,
+                emitCallback: true,
+            });
         } finally {
             animFrameRef.current = requestAnimationFrame(detect);
         }
-    }, [faceZoomFallbackEnabled, stabilizeHandsEnabled, minInferIntervalMs, videoRef]);
+    }, [detectCurrentFrame]);
 
     // 루프 시작 (마운트 즉시, isReady는 루프 내부에서 체크)
     useEffect(() => {
@@ -416,5 +469,5 @@ export const useMediaPipe = (
         };
     }, [detect]);
 
-    return { keypointsRef };
+    return { keypointsRef, isModelReady, detectCurrentFrame };
 };
