@@ -1,6 +1,6 @@
 // src/hooks/useHomeLoading.ts
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 export const useHomeLoading = (delay: number = 1000) => {
   const [isLoading, setIsLoading] = useState(true);
@@ -23,8 +23,12 @@ export const useHomeLoading = (delay: number = 1000) => {
     }
   }, [isTimerDone, isCameraReady]);
 
+  const handleCameraLoaded = useCallback(() => {
+    setIsCameraReady(true);
+  }, []);
+
   return {
     isLoading,
-    handleCameraLoaded: () => setIsCameraReady(true)
+    handleCameraLoaded
   };
 };

@@ -1,6 +1,5 @@
 // src/pages/Settings/FontSize/Components/FontSizeHeader.tsx
 
-import React from 'react';
 import { AiOutlineClose } from 'react-icons/ai';
 import { styles } from './FontSizeHeader.style'
 

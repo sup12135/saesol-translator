@@ -1,6 +1,5 @@
 // src/pages/Settings/FontSize/index.tsx (SL_SC_04)
 
-import React from 'react';
 import { useFontSize } from './useFontSize';
 import { FontSizeHeader } from "./Components/FontSizeHeader"; 
 import { FontSizePreview } from "./Components/FontSizePreview";

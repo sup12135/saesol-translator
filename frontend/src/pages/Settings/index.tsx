@@ -1,6 +1,6 @@
 //src/pages/Settings/index.tsx (SL_SC_02)
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import SettingsSkeleton from './SettingsSkeleton';
 import SettingsView from "./SettingsView";

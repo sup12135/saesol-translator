@@ -1,6 +1,5 @@
 // src/pages/Settings/SettingsSkeleton.tsx
 
-import React from 'react';
 
 function SettingsSkeleton() {
   const skeletonColors = {
