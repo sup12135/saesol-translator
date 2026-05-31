@@ -80,15 +80,16 @@ function Home() {
   }, [inputMode, update, videoRef]);
 
   // useMediaPipe: onFrame 콜백으로 매 프레임 update 호출
-  const { keypointsRef, isModelReady, detectCurrentFrame } = useMediaPipe(videoRef, onFrame, {
+  const { keypointsRef, isModelReady, detectCurrentFrame, resetTrackingState } = useMediaPipe(videoRef, onFrame, {
     stabilizeHands: true,
-    faceZoomFallback: false,
+    faceZoomFallback: true,
     maxFps: 30,
   });
 
-  const upsampleFramesLinear = useCallback((frames: number[][], targetLength: number) => {
+  const resampleFramesLinear = useCallback((frames: number[][], targetLength: number) => {
     if (frames.length === 0) return [] as number[][];
-    if (targetLength <= frames.length) return frames;
+    if (targetLength <= 0) return [];
+    if (targetLength === frames.length) return frames;
 
     const srcLen = frames.length;
     const colCount = frames[0]?.length ?? 0;
@@ -134,36 +135,38 @@ function Home() {
     if (mode === inputMode) return;
     setInputMode(mode);
     stop();
-    keypointsRef.current = null;
+    resetTrackingState();
     fileFrameRowsRef.current = [];
     sendingRef.current = false;
     setVideoStatus('idle');
-  }, [inputMode, keypointsRef, stop]);
+  }, [inputMode, resetTrackingState, stop]);
 
   const onVideoFileChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
+    // 같은 파일 재선택 시에도 change 이벤트가 다시 발생하도록 value를 즉시 비운다.
+    event.target.value = '';
 
     if (videoFileUrl) URL.revokeObjectURL(videoFileUrl);
 
     selectedFileRef.current = file;
     fileFrameRowsRef.current = [];
     sendingRef.current = false;
-    keypointsRef.current = null;
+    resetTrackingState();
     setVideoStatus('idle');
 
     const url = URL.createObjectURL(file);
     setVideoFileUrl(url);
     setInputMode('video');
     stop();
-  }, [keypointsRef, stop, videoFileUrl]);
+  }, [resetTrackingState, stop, videoFileUrl]);
 
   const onVideoPlay = useCallback(() => {
-    keypointsRef.current = null;
+    resetTrackingState();
     fileFrameRowsRef.current = [];
     sendingRef.current = false;
     setVideoStatus('playing');
-  }, [keypointsRef]);
+  }, [resetTrackingState]);
 
   const onVideoEnded = useCallback(async () => {
     if (sendingRef.current) return;
@@ -192,15 +195,19 @@ function Home() {
 
       const video = videoRef.current;
       const duration = Number.isFinite(video?.duration) ? (video?.duration ?? 0) : 0;
-      const quality = typeof video?.getVideoPlaybackQuality === 'function'
+      const quality = video && typeof video.getVideoPlaybackQuality === 'function'
         ? video.getVideoPlaybackQuality()
         : null;
-      const estimatedByQuality = quality?.totalVideoFrames ? Math.round(quality.totalVideoFrames) : 0;
-      const estimatedByDuration = duration > 0 ? Math.round(duration * 30) : 0;
-      const targetFrames = Math.max(rowsForSend.length, estimatedByQuality, estimatedByDuration);
+      const totalVideoFrames = quality?.totalVideoFrames ?? 0;
+      const estimatedBySourceFps = duration > 0 && totalVideoFrames > 0
+        ? Math.round(totalVideoFrames)
+        : 0;
+      const fallbackByDuration = duration > 0 ? Math.round(duration * 30) : 0;
+      const targetFrames = Math.max(1, estimatedBySourceFps || fallbackByDuration || rowsForSend.length);
 
-      const densified = upsampleFramesLinear(rowsForSend, targetFrames);
-      const interpolated = interpolateFrames(densified);
+      // 원본 영상 FPS(가능하면 totalVideoFrames) 기준 길이로 선형 리샘플링
+      const normalizedLengthFrames = resampleFramesLinear(rowsForSend, targetFrames);
+      const interpolated = interpolateFrames(normalizedLengthFrames);
       const response = await sendToBackend(file, interpolated, ext);
       if (!response || response.result === 'ERROR') {
         throw new Error('backend response error');
@@ -215,9 +222,9 @@ function Home() {
     } finally {
       sendingRef.current = false;
       fileFrameRowsRef.current = [];
-      keypointsRef.current = null;
+      resetTrackingState();
     }
-  }, [applyBackendResponse, detectCurrentFrame, keypointsRef, upsampleFramesLinear, videoRef]);
+  }, [applyBackendResponse, detectCurrentFrame, resetTrackingState, resampleFramesLinear, videoRef]);
 
   // 단축키 매핑 (Ctrl + Shift + A)
   useShortcut({

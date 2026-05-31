@@ -200,6 +200,7 @@ export const useMediaPipe = (
     keypointsRef: React.MutableRefObject<OpenPoseData | null>;
     isModelReady: boolean;
     detectCurrentFrame: (options?: DetectCurrentFrameOptions) => OpenPoseData | null;
+    resetTrackingState: () => void;
 } => {
     const keypointsRef = useRef<OpenPoseData | null>(null);
     const isReadyRef = useRef(false);
@@ -238,7 +239,7 @@ export const useMediaPipe = (
                 PoseLandmarker.createFromOptions(vision, {
                     baseOptions: {
                         modelAssetPath:
-                            'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task',
+                            'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_heavy/float16/1/pose_landmarker_heavy.task',
                         delegate: delegateName,
                     },
                     runningMode: 'VIDEO',
@@ -253,6 +254,7 @@ export const useMediaPipe = (
                     },
                     runningMode: 'VIDEO',
                     numFaces: 1,
+                    minFaceDetectionConfidence: 0.4,
                     outputFaceBlendshapes: false,
                     outputFacialTransformationMatrixes: false,
                 }),
@@ -265,6 +267,8 @@ export const useMediaPipe = (
                     },
                     runningMode: 'VIDEO',
                     numHands: 2,
+                    // minHandDetectionConfidence: 0.45,
+                    // minHandPresenceConfidence: 0.4
                 }),
             ]);
         };
@@ -352,7 +356,7 @@ export const useMediaPipe = (
             ) {
                 try {
                     fallbackCountRef.current += 1;
-                    const shouldTryFallback = fallbackCountRef.current % 5 === 0;
+                    const shouldTryFallback = fallbackCountRef.current % 3 === 0;
                     if (shouldTryFallback) {
                         const roi = buildFaceRoiFromPose(rawPose);
                         if (roi) {
@@ -448,6 +452,16 @@ export const useMediaPipe = (
         }
     }, [faceZoomFallbackEnabled, stabilizeHandsEnabled, minInferIntervalMs, videoRef]);
 
+    const resetTrackingState = useCallback(() => {
+        keypointsRef.current = null;
+        prevLeftWristRef.current = null;
+        prevRightWristRef.current = null;
+        lastInferMsRef.current = 0;
+        fallbackCountRef.current = 0;
+        lastLoopErrorLogMsRef.current = 0;
+        lastVideoTimeMapRef.current = new WeakMap();
+    }, []);
+
     // 매 프레임 감지 루프
     const detect = useCallback(() => {
         try {
@@ -469,5 +483,5 @@ export const useMediaPipe = (
         };
     }, [detect]);
 
-    return { keypointsRef, isModelReady, detectCurrentFrame };
+    return { keypointsRef, isModelReady, detectCurrentFrame, resetTrackingState };
 };

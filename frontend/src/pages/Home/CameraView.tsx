@@ -134,7 +134,7 @@ const CameraView = ({
           autoPlay
           playsInline 
           muted={mode === 'camera'}
-          controls={mode === 'video'}
+          controls={false}
           src={mode === 'video' ? (videoSrc ?? '') : undefined}
           onEnded={mode === 'video' ? onVideoEnded : undefined}
           onPlay={mode === 'video' ? onVideoPlay : undefined}
