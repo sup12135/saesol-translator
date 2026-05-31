@@ -1,48 +1,33 @@
-//src/pages/Settings/TTS/Components/TTSGenderSelection.tsx
+// src/pages/Settings/TTS/Components/TTSGenderSelection.tsx
 
-import { MdMan, MdWoman } from 'react-icons/md'; 
+import { MdMan, MdWoman } from 'react-icons/md';
+import { TTSGenderButton } from './TTSGenderButton';
+import { containerStyle } from './TTSGenderStyles'
 
 interface TTSGenderProps {
   selectedGender: 'male' | 'female' | null;
   onSelectGender: (gender: 'male' | 'female') => void;
 }
 
-export const TTSGenderSelection = ({ selectedGender, onSelectGender }: TTSGenderProps) => (
-  <div style={{ display: 'flex', justifyContent: 'center', gap: '40px', padding: '20px 0' }}>
-    <button
-      onClick={() => onSelectGender('female')}
-      style={{
-        width: '80px',
-        height: '80px',
-        borderRadius: '50%',
-        border: 'none',
-        cursor: 'pointer',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: selectedGender === 'female' ? '#CDE6EF' : '#E0E0E0',
-        transition: 'background-color 0.2s ease'
-      }}
-    >
-      <MdWoman size={48} color="#333333" />
-    </button>
+export const TTSGenderSelection = ({
+  selectedGender,
+  onSelectGender,
+}: TTSGenderProps) => {
+  return (
+    <div style={containerStyle}>
+      <TTSGenderButton
+        selected={selectedGender === 'female'}
+        onClick={() => onSelectGender('female')}
+      >
+        <MdWoman size={48} color="#333333" />
+      </TTSGenderButton>
 
-    <button
-      onClick={() => onSelectGender('male')}
-      style={{
-        width: '80px',
-        height: '80px',
-        borderRadius: '50%',
-        border: 'none',
-        cursor: 'pointer',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: selectedGender === 'male' ? '#CDE6EF' : '#E0E0E0',
-        transition: 'background-color 0.2s ease'
-      }}
-    >
-      <MdMan size={48} color="#333333" />
-    </button>
-  </div>
-);
+      <TTSGenderButton
+        selected={selectedGender === 'male'}
+        onClick={() => onSelectGender('male')}
+      >
+        <MdMan size={48} color="#333333" />
+      </TTSGenderButton>
+    </div>
+  );
+};

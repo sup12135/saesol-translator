@@ -1,0 +1,25 @@
+/* src/pages/Settings/TTS/Components/VoiceSelector.css */
+
+.voice-preview-btn {
+  width: 100%;
+  padding: 16px;
+  border-radius: 14px;
+  border: none;
+
+  background-color: #5BB6D6;
+  color: white;
+
+  font-size: 18px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition: all 0.2s ease;
+
+  box-shadow: 0 4px 12px rgba(91, 182, 214, 0.25);
+}
+
+.voice-preview-btn:hover {
+  background-color: #49A9CA;
+  transform: translateY(-2px);
+}

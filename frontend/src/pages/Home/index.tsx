@@ -3,14 +3,17 @@
 import { useState, useRef, useEffect, useCallback, type ChangeEvent } from 'react';
 import HomeSkeleton from './HomeSkeleton';
 import CameraView from './CameraView';
-import SubtitleArea from './SubtitleArea';
+import SubtitleArea from './SubtitleArea/SubtitleArea';
 import SkeletonOverlay from './SkeletonOverlay';
 import SkeletonStatusBadge from './SkeletonStatusBadge';
+import TTSTestButton from './components/TTSTestButton';
 import { useShortcut } from '../../hooks/UseShortcut';
 import { useHomeLoading } from '../../hooks/useHomeLoading';
+import { useHomeTTS } from '../../hooks/useHomeTTS'
+import { getRandomTestSentence } from '../../hooks/useSubtitleTest'
+import { styles } from './Home.style';
 import { type OpenPoseData, useMediaPipe } from '../../hooks/useMediaPipe';
 import { extractKeypointRow, interpolateFrames, resolveOutputSize, sendToBackend, useRecorder } from '../../hooks/useRecorder';
-import { styles } from './Home.style'; 
 
 type BackendPredictResponse = {
   result?: string;
@@ -27,8 +30,20 @@ function Home() {
   const [translatedText, setTranslatedText] = useState('번역 준비 완료');
   const [systemMsg, setSystemMsg] = useState('카메라 앞에서 수어를 시작하면 자동으로 인식합니다.');
 
-  // videoRef 생성 위치 변경
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const [subtitleText, setSubtitleText] =
+    useState('');
+
+  const [isTTSEnabled, setIsTTSEnabled] =
+    useState(true);
+
+  // videoRef
+  const videoRef =
+    useRef<HTMLVideoElement>(null);
+
+
+
+
+//merge
 
   // streamRef 추가, useRecorder에 전달
   const streamRef = useRef<MediaStream | null>(null);
@@ -52,6 +67,7 @@ function Home() {
     const outputText = normalizedSentence || morpheme || '번역 결과 없음';
 
     setTranslatedText(outputText);
+    setSubtitleText(outputText);
     setSystemMsg(`백엔드 응답 수신 완료 (${source})`);
   }, []);
 
@@ -120,7 +136,13 @@ function Home() {
     return out;
   }, []);
 
-  // 컴포넌트 언마운트 시 진행 중인 녹화 강제 종료
+  // TTS hook
+  useHomeTTS({
+    subtitleText,
+    isTTSEnabled,
+  });
+
+  // 언마운트
   useEffect(() => {
     return () => stop();
   }, [stop]);
@@ -231,75 +253,124 @@ function Home() {
     targetKey: 'A',
     requireCtrl: true,
     requireShift: true,
+
     onTrigger: () => {
-      if (!isLoading) setShowSkeleton((prev) => !prev);
-    }
+      if (!isLoading) {
+        setShowSkeleton((prev) => !prev);
+      }
+    },
   });
 
-  return (
-    <div style={styles.container}>
-      {/* 상단 테스트용 배지 */}
-      {!isLoading && <SkeletonStatusBadge showSkeleton={showSkeleton} />}
-      
-      {/* 로딩 스켈레톤 UI */}
-      {isLoading && <HomeSkeleton />}
+  // TTS ON/OFF
+  const handleToggleTTS = () => {
+    setIsTTSEnabled((prev) => !prev);
+  };
 
-      {/* 메인 콘텐츠 영역 */}
-      <div style={{ ...styles.contentWrapper, display: isLoading ? 'none' : 'flex' }}>
-        <main style={styles.main}>
-          <div style={styles.videoContainer}>
-            <div style={styles.controlsRow}>
-              <div style={styles.modeGroup}>
-                <button
-                  type="button"
-                  style={{ ...styles.modeBtn, ...(inputMode === 'camera' ? styles.modeBtnActive : {}) }}
-                  onClick={() => onSelectMode('camera')}
-                >
-                  Camera Mode
-                </button>
-                <button
-                  type="button"
-                  style={{ ...styles.modeBtn, ...(inputMode === 'video' ? styles.modeBtnActive : {}) }}
-                  onClick={() => onSelectMode('video')}
-                >
-                  Video Mode
-                </button>
-              </div>
-              <input
-                type="file"
-                accept="video/mp4,video/webm,video/*"
-                style={styles.fileInput}
-                onChange={onVideoFileChange}
-              />
+  // 테스트
+  const handleTestTTS = () => {
+    setSubtitleText(
+      getRandomTestSentence()
+    );
+  };
+
+return (
+  <div style={styles.container}>
+    {!isLoading && (
+      <TTSTestButton
+        onClick={handleTestTTS}
+      />
+    )}
+
+    {!isLoading && (
+      <SkeletonStatusBadge
+        showSkeleton={showSkeleton}
+      />
+    )}
+
+    {isLoading && <HomeSkeleton />}
+
+    <div
+      style={{
+        ...styles.contentWrapper,
+        display: isLoading
+          ? 'none'
+          : 'flex',
+      }}
+    >
+      <main style={styles.main}>
+        <div style={styles.videoContainer}>
+          <div style={styles.controlsRow}>
+            <div style={styles.modeGroup}>
+              <button
+                type="button"
+                style={{
+                  ...styles.modeBtn,
+                  ...(inputMode === 'camera'
+                    ? styles.modeBtnActive
+                    : {}),
+                }}
+                onClick={() => onSelectMode('camera')}
+              >
+                Camera Mode
+              </button>
+
+              <button
+                type="button"
+                style={{
+                  ...styles.modeBtn,
+                  ...(inputMode === 'video'
+                    ? styles.modeBtnActive
+                    : {}),
+                }}
+                onClick={() => onSelectMode('video')}
+              >
+                Video Mode
+              </button>
             </div>
-            <div style={styles.videoStage}>
-              <CameraView
-                mode={inputMode}
-                videoRef={videoRef}
-                streamRef={streamRef}
-                isMonitoring={inputMode === 'camera'}
-                canStartVideo={isModelReady}
-                onLoaded={handleCameraLoaded}
-                recorderPhase={status.phase}
-                videoSrc={videoFileUrl}
-                videoStatus={videoStatus}
-                onVideoEnded={onVideoEnded}
-                onVideoPlay={onVideoPlay}
-              />
-              {showSkeleton && (
-                <SkeletonOverlay
-                  keypointsRef={keypointsRef}
-                  videoRef={videoRef}
-                  mirrored={false}
-                />
-              )}
-            </div>
+
+            <input
+              type="file"
+              accept="video/mp4,video/webm,video/*"
+              style={styles.fileInput}
+              onChange={onVideoFileChange}
+            />
           </div>
-        </main>
-        <SubtitleArea translatedText={translatedText} systemMsg={systemMsg} />
-      </div>
+
+          <div style={styles.videoStage}>
+            <CameraView
+              mode={inputMode}
+              videoRef={videoRef}
+              streamRef={streamRef}
+              isMonitoring={inputMode === 'camera'}
+              canStartVideo={isModelReady}
+              onLoaded={handleCameraLoaded}
+              recorderPhase={status.phase}
+              videoSrc={videoFileUrl}
+              videoStatus={videoStatus}
+              onVideoEnded={onVideoEnded}
+              onVideoPlay={onVideoPlay}
+            />
+
+            {showSkeleton && (
+              <SkeletonOverlay
+                keypointsRef={keypointsRef}
+                videoRef={videoRef}
+                mirrored={false}
+              />
+            )}
+          </div>
+        </div>
+      </main>
+
+      <SubtitleArea
+        translatedText={translatedText}
+        systemMsg={systemMsg}
+        isTTSEnabled={isTTSEnabled}
+        onToggleTTS={handleToggleTTS}
+      />
     </div>
-  );
+  </div>
+);
 }
 
 export default Home;
