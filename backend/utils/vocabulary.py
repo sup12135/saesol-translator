@@ -25,24 +25,25 @@ class Vocabulary:
         self.stoi_dict = {token: i for i, token in enumerate(self.vocab)}
         self.itos_dict = {i: token for i, token in enumerate(self.vocab)}
 
-        # unknown token index
         self.unk_id = self.stoi_dict["<unk>"]
     
+    # token -> index
     def stoi(self, token):
         return self.stoi_dict.get(token, self.unk_id)
 
-    # 🔹 index → token
+    # index -> token
     def itos(self, index):
         return self.itos_dict.get(index, "<unk>")
 
-    # 🔹 glosses → index 리스트
+    # glosses -> index 리스트
     def encode(self, tokens):
         return [self.stoi(t) for t in ast.literal_eval(tokens)]
 
-    # 🔹 index 리스트 → glosses
+    # index 리스트 -> glosses
     def decode(self, indices):
         return [self.itos(i) for i in indices]
     
+    # 만들어진 단어장을 저장하는 함수
     def save_csv(self, path: str):
         out_path = Path(path)
 
@@ -53,6 +54,7 @@ class Vocabulary:
         })
         df.to_csv(out_path, index=False, encoding="utf-8-sig")
 
+    # 만들어진 단어장을 불러오는 함수
     @classmethod
     def load_csv(cls, path: str) -> "Vocabulary":
         in_path = Path(path)

@@ -1,8 +1,9 @@
-from typing import Callable, Iterable, List, Sequence, Tuple
+# metrics에서 제작된 함수들은 AI가 작성한 코드로 검증 후 사용되었음
 
+from typing import Callable, Iterable, List, Sequence, Tuple
 import tensorflow as tf
 
-
+# 예측값과 정답값의 최소 수정 횟수를(WER 비율을 위한) DP 알고리즘을 통해 찾는 함수
 def _edit_distance(ref: Sequence[int], hyp: Sequence[int]) -> int:
     n = len(ref)
     m = len(hyp)
@@ -23,7 +24,7 @@ def _edit_distance(ref: Sequence[int], hyp: Sequence[int]) -> int:
             )
     return dp[n][m]
 
-
+# 예측값과 정답값의 최소 수정 횟수의 모든 중간 결과 값을 반환하는 함수
 def _edit_distance_table(ref: Sequence[int], hyp: Sequence[int]) -> List[List[int]]:
     n = len(ref)
     m = len(hyp)
@@ -44,28 +45,30 @@ def _edit_distance_table(ref: Sequence[int], hyp: Sequence[int]) -> List[List[in
             )
     return dp
 
-
+# 예측된 형태소 토큰 결과를 후처리하는 함수
 def ctc_collapse(seq: Iterable[int], blank: int = 0) -> List[int]:
     result: List[int] = []
     prev = None
     for token in seq:
         token = int(token)
+        
+        # 토큰이 blank이거나 이전 토큰과 다르면 result에 저장
         if token != blank and token != prev:
             result.append(token)
         prev = token
     return result
 
-
+# 패딩 토큰을 제거하는 함수
 def strip_pad(seq: Iterable[int], pad: int = 3) -> List[int]:
     return [int(t) for t in seq if int(t) != pad]
 
-
+# 하나의 예측에 대한 wer 비율을 반환하는 함수
 def wer_single(ref: Sequence[int], hyp: Sequence[int]) -> float:
     if len(ref) == 0:
         return 0.0 if len(hyp) == 0 else 1.0
     return _edit_distance(ref, hyp) / float(len(ref))
 
-
+# 여러 예측(batch 만큼)에 대한 wer 비율을 반환하는 함수
 def wer_batch(
     refs: Sequence[Sequence[int]],
     hyps: Sequence[Sequence[int]],
@@ -81,7 +84,7 @@ def wer_batch(
         return 0.0, total_edits, total_words
     return total_edits / float(total_words), total_edits, total_words
 
-
+# 모델의 logits 결과를 디코딩하는 함수
 def decode_ctc_greedy_from_logits(
     logits: tf.Tensor,
     input_length: tf.Tensor,
@@ -89,12 +92,16 @@ def decode_ctc_greedy_from_logits(
 ) -> List[List[int]]:
     # logits: [B, T, C]
     log_probs = tf.nn.log_softmax(tf.cast(logits, tf.float32), axis=-1)
+    
+    # logits을 [T, B, C]로 이동 후 디코딩
     decoded, _ = tf.nn.ctc_greedy_decoder(
         tf.transpose(log_probs, [1, 0, 2]),
         tf.cast(input_length, tf.int32),
         blank_index=blank_index,
     )
     dense = tf.sparse.to_dense(decoded[0], default_value=blank_index).numpy()
+    
+    # 한번 더 후처리 후 반환
     return [ctc_collapse(row, blank=blank_index) for row in dense]
 
 
@@ -108,17 +115,13 @@ def wer_from_logits(
     hyps = decode_ctc_greedy_from_logits(logits, input_length, blank_index=blank_index)
     refs = [strip_pad(row, pad=pad_index) for row in labels.numpy()]
     wer, edits, words = wer_batch(refs, hyps)
+    
+    # wer 비율, 수정 횟수, 예측할 단어 수, 정답 형태소 시퀀스, 예측 형태소 시퀀스
     return wer, edits, words, refs, hyps
 
-
+# 정확한 정답값, 예측값 비교 테이블을 만들어주는 함수
 def alignment_ops(ref: Sequence[int], hyp: Sequence[int]) -> List[dict]:
-    """Return token-level alignment operations.
-
-    Each item has:
-    - op: one of 'equal', 'substitute', 'insert', 'delete'
-    - ref_token: token id or None
-    - hyp_token: token id or None
-    """
+    
     dp = _edit_distance_table(ref, hyp)
     i = len(ref)
     j = len(hyp)
@@ -146,7 +149,6 @@ def alignment_ops(ref: Sequence[int], hyp: Sequence[int]) -> List[dict]:
             j -= 1
             continue
 
-        # fallback safety
         if i > 0 and j > 0:
             ops.append({"op": "substitute", "ref_token": int(ref[i - 1]), "hyp_token": int(hyp[j - 1])})
             i -= 1
@@ -161,7 +163,7 @@ def alignment_ops(ref: Sequence[int], hyp: Sequence[int]) -> List[dict]:
     ops.reverse()
     return ops
 
-
+# alignment_ops 함수로 얻어진 정답값과 예측값 비교 테이블을 report 형식으로 출력하기 위한 함수
 def format_alignment_report(
     ref: Sequence[int],
     hyp: Sequence[int],
@@ -235,7 +237,6 @@ def format_batch_alignment_reports(
     include_equal: bool = False,
     max_samples: int | None = None,
 ) -> str:
-    """Create a concatenated alignment report for a batch."""
     n = min(len(refs), len(hyps))
     if max_samples is not None:
         n = min(n, int(max_samples))

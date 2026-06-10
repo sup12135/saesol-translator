@@ -5,8 +5,9 @@ ckpt_finetune/
 ckpt/
 result/
 
-# 2. 로그 파일
+# 2. 로그 파일 및 env 파일
 *.log
+.env
 
 # 3. 에디터 및 OS 설정 (깔끔한 협업 환경)
 .vscode/

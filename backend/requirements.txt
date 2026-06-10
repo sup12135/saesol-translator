@@ -63,6 +63,7 @@ pydantic==2.13.4
 pydantic_core==2.46.4
 Pygments @ file:///home/conda/feedstock_root/build_artifacts/pygments_1774796700044/work
 python-dateutil @ file:///home/conda/feedstock_root/build_artifacts/bld/rattler-build_python-dateutil_1751104122/work
+python-dotenv==1.2.2
 python-multipart==0.0.28
 pytz==2026.1.post1
 pywin32 @ file:///D:/bld/bld/rattler-build_pywin32_1756487147/work

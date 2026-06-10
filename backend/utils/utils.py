@@ -1,20 +1,21 @@
 import numpy as np
 
+# 양쪽 어깨의 중심(root)과 어깨폭(scale)을 계산하는 함수
 def _get_shoulder_root_scale(pose):
-    """pose에서 어깨 중심(root)과 어깨폭(scale)을 계산한다."""
     r_shoulder = pose[2, :2]
     l_shoulder = pose[5, :2]
+    
     root = (r_shoulder + l_shoulder) / 2.0
     scale = np.linalg.norm(l_shoulder - r_shoulder)
+    
+    # scale이 너무 작은 경우 1로 처리
     if scale < 1e-6:
         scale = 1.0
+        
     return root, float(scale)
 
 def normalize_pose(pose, root=None, scale=None):
     pose = pose.copy()
-
-    if root is None or scale is None:
-        root, scale = _get_shoulder_root_scale(pose)
 
     pose[:, :2] = (pose[:, :2] - root) / scale
 
@@ -23,14 +24,8 @@ def normalize_pose(pose, root=None, scale=None):
 def normalize_hand(hand, scale=None):
     hand = hand.copy()
 
-    # 손목 기준으로 이동 후, 스케일은 어깨폭(권장) 또는 기존 bbox 스케일 사용
+    # 손목을 기준 좌표로 선택
     wrist = hand[0, :2]
-    if scale is None:
-        min_xy = np.min(hand[:, :2], axis=0)
-        max_xy = np.max(hand[:, :2], axis=0)
-        scale = np.max(max_xy - min_xy)
-        if scale < 1e-6:
-            scale = 1.0
 
     hand[:, :2] = (hand[:, :2] - wrist) / scale
 
@@ -39,24 +34,15 @@ def normalize_hand(hand, scale=None):
 def normalize_face(face, scale=None):
     face = face.copy()
 
-    # 코 주변 포인트를 중심으로 이동 후, 스케일은 어깨폭(권장) 또는 기존 bbox 스케일 사용
+    # 코 주변 포인트를 기준 좌표로 선택
     center = face[30, :2]
-    if scale is None:
-        min_xy = np.min(face[:, :2], axis=0)
-        max_xy = np.max(face[:, :2], axis=0)
-        scale = np.max(max_xy - min_xy)
-        if scale < 1e-6:
-            scale = 1.0
 
     face[:, :2] = (face[:, :2] - center) / scale
 
     return face
 
+# keypoint를 정규화하는 함수
 def normalize_keypoints(keypoints):
-    """
-    sequence: (T, 381)
-    return: (T, 381)
-    """
     T = keypoints.shape[0]
     normalized_seq = []
 

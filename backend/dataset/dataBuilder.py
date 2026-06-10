@@ -4,15 +4,10 @@ import numpy as np
 import pandas as pd
 import utils
 import math
-import json
 
 def create_infer_data(video_path, keypoints):
     video_data = load_video(video_path)
     keypoints_data = load_keypoints(keypoints)
-    
-    # keypoints_data = json.loads(keypoints)
-    # keypoints_data = keypoints.values.astype(np.float32)
-    # keypoints_data = utils.normalize_keypoints(keypoints)
     
     T = min(len(video_data), len(keypoints_data))
 
@@ -43,6 +38,8 @@ def load_video(video_path):
     return np.array(frames)
 
 def load_keypoints(keypoint_path):
+    
+    # 사용하지 않을 keypoint index
     remove_idx = np.r_[
         240:246,
         249:255,
@@ -52,6 +49,7 @@ def load_keypoints(keypoint_path):
     keypoints = pd.read_csv(keypoint_path)
     keypoints = keypoints.values.astype(np.float32)
     
+    # 사용하지 않을 keypoint index를 삭제
     keypoints = np.delete(keypoints, remove_idx, axis=1)
 
     keypoints = utils.normalize_keypoints(keypoints)
@@ -67,8 +65,10 @@ def load_video_and_keypoint(video_path, keypoint_path):
     video = load_video(video_path)
     keypoint = load_keypoints(keypoint_path)
     
+    # video 길이과 keypoint 길이를 비교하여 작은 값 확인    
     T = min(len(video), len(keypoint))
 
+    # T에 맞춰 30fps 길이를 15fps 길이로 축소
     video = video[:T:2]
     keypoint = keypoint[:T:2]
     
@@ -77,6 +77,7 @@ def load_video_and_keypoint(video_path, keypoint_path):
 
     return video, keypoint
 
+# tf.data.Dataset.from_generator를 위한 load 함수
 def load_data(video_path, keypoint_path, glosses):
     video, keypoint = tf.numpy_function(
         load_video_and_keypoint,
@@ -86,10 +87,6 @@ def load_data(video_path, keypoint_path, glosses):
 
     video.set_shape((None, 224, 224, 3))
     keypoint.set_shape((None, 381))
-
-    #T = tf.minimum(tf.shape(video)[0], tf.shape(keypoint)[0])
-    #video = video[:T:2]
-    #keypoint = keypoint[:T:2]
 
     return (video, keypoint, tf.shape(video)[0]), glosses
 
@@ -129,6 +126,8 @@ def make_dataset_from_df(data, batch_size):
     
     return dataset.prefetch(tf.data.AUTOTUNE)
 
+# 전체 데이터를 make_shards_num 기준으로 분해하는 함수
+# 빠른 학습 재개를 위해 사용
 def make_shard_dataset(data, make_shards_num):
     NUM_SAMPLES = len(data)
     SHARD_SAMPLE_SIZE = math.ceil(NUM_SAMPLES / make_shards_num)

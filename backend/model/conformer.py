@@ -1,5 +1,6 @@
 import tensorflow as tf
 
+# AI가 제작한 ConformerBlock
 class ConformerBlock(tf.keras.Model):
     def __init__(self, d_model=256, num_heads=4, ffn_mult=4, conv_kernel=15, dropout=0.1, name=None):
         super().__init__(name=name)

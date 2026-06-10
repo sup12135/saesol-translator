@@ -8,10 +8,11 @@ def make_frame_mask(video):
     # 프레임에서 절댓값이 가장 큰 값을 뽑기
     energy = tf.reduce_max(tf.abs(v), axis=[2, 3, 4])  # [B, T]
     
-    # 절댓값이 0보다 크면 True, 아니면 False가 반환되는 배열 출력
+    # 프레임에서 절댓값 가장 큰 값이 0보다 크면 True, 아니면 False가 반환되는 배열 출력
+    # 0보다 크지 않으면 모든 프레임의 값이 0이기 때문 -> 패딩된 비디오 프레임
     return energy > 0.0
 
-
+# 수어 번역 모델을 생성하는 함수
 def make_model(voca_size):
     video_input = tf.keras.Input(shape=(None, 224, 224, 3))
     keypoint_input = tf.keras.Input(shape=(None, 381))

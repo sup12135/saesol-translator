@@ -12,6 +12,10 @@ import json
 import numpy as np
 from typing import Optional
 from fastapi.middleware.cors import CORSMiddleware
+from dotenv import load_dotenv
+
+#env 파일 불러오기
+load_dotenv()
 
 DEBUG_SAVE_DIR = r"./debug_log"
 DEBUG_SAVE_REQUEST_ARTIFACTS = True
@@ -43,9 +47,9 @@ config = utils.load_config("./configs/config.yaml")
 #단어 사전, 모델 불러오기
 vocabulary = utils.Vocabulary.load_csv(config['vocabulary']['path'])
 sign_model = make_model(len(vocabulary.vocab))
-sign_model.load_weights(r"C:\Python_exam\model_weight\sign_model(finetune)_7.weights.h5")
+sign_model.load_weights(os.getenv('MODEL_WEIGHTS_PATH'))
 
-client = genai.Client(api_key="")
+client = genai.Client(api_key=os.getenv('GEMINI_API_KEY'))
 
 app = FastAPI()
 
@@ -110,6 +114,8 @@ async def inter_morpheme(video, keypoint):
 
     low_conf_mask = frame_max_prob < CTC_FRAME_MAX_PROB_THRESHOLD  # [B, T]
     vocab_size = tf.shape(logits_fp32)[-1]
+    
+    #
     blank_logits = tf.one_hot(
         CTC_BLANK_INDEX,
         depth=vocab_size,
@@ -121,13 +127,6 @@ async def inter_morpheme(video, keypoint):
     blank_logits = tf.reshape(blank_logits, [1, 1, -1])
     filtered_logits = tf.where(low_conf_mask[..., tf.newaxis], blank_logits, logits_fp32)
 
-    low_conf_ratio = float(tf.reduce_mean(tf.cast(low_conf_mask, tf.float32)).numpy())
-    print(
-        f"[CTC] mean_max_prob={mean_max_prob:.4f}, "
-        f"frame_th={CTC_FRAME_MAX_PROB_THRESHOLD:.2f}, "
-        f"seq_th={CTC_MEAN_MAX_PROB_THRESHOLD:.2f}, "
-        f"low_conf_ratio={low_conf_ratio:.3f}"
-    )
     if mean_max_prob < CTC_MEAN_MAX_PROB_THRESHOLD:
         print("[CTC] low confidence sequence skipped")
         return []
@@ -250,8 +249,8 @@ async def predict(
         sentence = ''
         if(len(morphemes) == 1):
             sentence = morphemes[0]
-        elif(len(morphemes) > 1):
-            sentence = await create_sentence(str(morphemes))
+        # elif(len(morphemes) > 1):
+        #     sentence = await create_sentence(str(morphemes))
             
         llm_api_time = time.perf_counter()
         print(f"llm 요청 완료 시간: {llm_api_time - infer_time}")
