@@ -25,5 +25,6 @@ c:/Users/유저이름/.conda/envs/환경이름/python.exe main.py
 AI-HUB의 '수어 영상' 데이터를 이용하여 모델 학습
 
 # 학습 데이터 가공
-### dataset/data_processing에 있는 VideoConverter.exe, KeyFrameBuilder.exe을 이용하여 1차 가공
-    dataset/data_processing에 있는 dataset.ipynb을 통해 데이터 셋 만들기
+### 
+dataset/data_processing에 있는 VideoConverter.exe, KeyFrameBuilder.exe을 이용하여 1차 가공  
+dataset/data_processing에 있는 dataset.ipynb을 통해 데이터 셋 만들기
