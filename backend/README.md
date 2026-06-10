@@ -1,11 +1,11 @@
 # 수어 번역 시스템 백엔드
 학습, 백엔드 구축 시 사용한 컴퓨터 사양
 
-> CPU: AMD Ryzen 5 9600X
-> RAM: 36GB
-> VGB: NVIDIA GEFORCE RTX 4070 SUPER
-> SSD: WD_BLACK SN850X 1TB
-> OS: Windows 11
+> CPU: AMD Ryzen 5 9600X  
+> RAM: 36GB  
+> VGB: NVIDIA GEFORCE RTX 4070 SUPER  
+> SSD: WD_BLACK SN850X 1TB  
+> OS: Windows 11  
 
 # 사용 방법
 anaconda 환경을 이용하여 model.ipynb 파일을 통해 모델 학습
