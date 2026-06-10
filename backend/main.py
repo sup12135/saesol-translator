@@ -45,7 +45,7 @@ vocabulary = utils.Vocabulary.load_csv(config['vocabulary']['path'])
 sign_model = make_model(len(vocabulary.vocab))
 sign_model.load_weights(r"C:\Python_exam\model_weight\sign_model(finetune)_7.weights.h5")
 
-client = genai.Client(api_key="AIzaSyAHDB-1u-5UNsHffrVzbhXhWVR_19BZqCM")
+client = genai.Client(api_key="")
 
 app = FastAPI()
 
@@ -53,7 +53,6 @@ origins = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
     "http://192.168.0.1:5173",
-    "http://yungjin702.iptime.org:5173",
 ]
 
 app.add_middleware(
