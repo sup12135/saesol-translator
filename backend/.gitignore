@@ -6,6 +6,7 @@ ckpt/
 result/
 
 # 2. 로그 파일 및 env 파일
+debug_log/
 *.log
 .env
 
