@@ -1,0 +1,19 @@
+# 1. 의존성 및 빌드 결과물 (용량 및 보안)
+__pycache__/
+*.spec
+ckpt_finetune/
+ckpt/
+
+# 2. 로그 파일
+*.log
+
+# 3. 에디터 및 OS 설정 (깔끔한 협업 환경)
+.vscode/
+
+# 4. 가중치 파일
+*.weights.h5
+
+# 5. 기타 시스템 파일
+*.suo
+*.sln
+*.sw?

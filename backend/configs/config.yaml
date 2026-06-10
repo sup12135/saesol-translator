@@ -1,0 +1,40 @@
+resume_train: False
+train_finetune: True
+
+data:
+  path: "C:/Users/user/Downloads/수어 영상/1.Training/"
+  train_path: "datasetV4.csv"
+  val_path: "valid_datasetV4.csv"
+  test_path: "test_datasetV4.csv"
+  num_shards: 256
+
+vocabulary:
+  path: "vocabulary.csv"
+
+model:
+  save_path: "./model_weight/sign_model(finetune)"
+  ext: ".weights.h5"
+
+training:
+  epoch: 20
+  batch_size: 2
+  
+  checkpoint:
+    #directory: "./ckpt"
+    directory: "./ckpt_finetune"
+    max_to_keep: 5
+
+  result:
+    path: "./result/result_new.csv"
+
+optimizer:
+  #init_lr: 0.00005
+  init_lr: 0.00001
+  min_lr: 0.00001
+  decay_rate: 0.90
+  dynamic_growth_steps: 8000
+
+logging:
+  directory: "./logs/train_finetune.log"
+
+seed: 42
