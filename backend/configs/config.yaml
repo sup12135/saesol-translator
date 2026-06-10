@@ -28,8 +28,8 @@ training:
     path: "./result/result_new.csv"
 
 optimizer:
-  #init_lr: 0.00005
-  init_lr: 0.00001
+  #init_lr: 0.00005 # 학습 시
+  init_lr: 0.00001  # 파인튜닝 시
   min_lr: 0.00001
   decay_rate: 0.90
   dynamic_growth_steps: 8000
