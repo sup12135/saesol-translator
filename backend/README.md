@@ -8,15 +8,16 @@
 > OS: Windows 11  
 
 # 사용 방법
-anaconda 환경을 이용하여 model.ipynb 파일을 통해 모델 학습
-
+### anaconda 환경을 이용하여 model.ipynb 파일을 통해 모델 학습
 ```
 conda create -n 환경이름 python=3.10.20
 conda activate 환경이름
 python -m pip install -r clone위치/backend/requirements.txt
 ```
+configs/에 있는 config.yaml을 이용하여 학습 환경 설정
 
-anaconda 환경을 이용하여 backend 실행
+
+### anaconda 환경을 이용하여 backend 실행
 ```
 c:/Users/유저이름/.conda/envs/환경이름/python.exe main.py
 ```
