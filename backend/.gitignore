@@ -3,6 +3,7 @@ __pycache__/
 *.spec
 ckpt_finetune/
 ckpt/
+result/
 
 # 2. 로그 파일
 *.log
