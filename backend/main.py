@@ -216,23 +216,25 @@ async def predict(
             keypoints_list = json.loads(keypoints)
 
         keypoints_array = np.asarray(keypoints_list, dtype=np.float32)
+        pd.DataFrame(keypoints_array).to_csv(temp_csv, index=False)
 
         debug_video_path: Optional[str] = None
         debug_video_224_path: Optional[str] = None
         debug_keypoint_csv_path: Optional[str] = None
         
-        #디버그용으로 전달 받은 영상, 키포인트 데이터를 DEBUG_SAVE_DIR에 하기 위한 경로 설정
+        #디버그용으로 전달 받은 영상, 키포인트 데이터를 DEBUG_SAVE_DIR에 저장하기 위한 경로 설정
         if DEBUG_SAVE_REQUEST_ARTIFACTS:
             os.makedirs(DEBUG_SAVE_DIR, exist_ok=True)
             stem = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
             debug_video_path = os.path.join(DEBUG_SAVE_DIR, f"{stem}_orig{ext}")
             debug_video_224_path = os.path.join(DEBUG_SAVE_DIR, f"{stem}_224.mp4")
             debug_keypoint_csv_path = os.path.join(DEBUG_SAVE_DIR, f"{stem}.csv")
+            
+            # 원본 비디오 영상 저장
             with open(debug_video_path, "wb") as f:
                 f.write(video_bytes)
 
-
-        pd.DataFrame(keypoints_array).to_csv(temp_csv, index=False)
+        # 224x224 비디오 저장 및 keypoint 데이터 debug 폴더에 저장
         if debug_keypoint_csv_path:
             pd.DataFrame(keypoints_array).to_csv(debug_keypoint_csv_path, index=False)
 
@@ -240,6 +242,7 @@ async def predict(
         if debug_video_224_path and video_224_path and os.path.exists(video_224_path):
             shutil.copy2(str(video_224_path), debug_video_224_path)
 
+        # 모델 추론
         video_data, keypoints_data = create_infer_data(str(video_224_path), temp_csv)        
         
         morphemes = await inter_morpheme(video_data, keypoints_data)
@@ -249,8 +252,8 @@ async def predict(
         sentence = ''
         if(len(morphemes) == 1):
             sentence = morphemes[0]
-        # elif(len(morphemes) > 1):
-        #     sentence = await create_sentence(str(morphemes))
+        elif(len(morphemes) > 1):
+            sentence = await create_sentence(str(morphemes))
             
         llm_api_time = time.perf_counter()
         print(f"llm 요청 완료 시간: {llm_api_time - infer_time}")
