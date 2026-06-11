@@ -11,6 +11,7 @@ const MIME_CANDIDATES = [
 ] as const;
 export const BACKEND_URL = 'http://yungjin702.iptime.org:47100/request_sentence';
 
+// 녹화 시작/종료 판단 상수
 const READY_HOLD_SEC = 0.5;
 const READY_MISS_GRACE_SEC = 0.35;
 const MISSING_STOP_GRACE_SEC = 1.0;
@@ -38,6 +39,7 @@ interface UseRecorderParams {
     onBackendResult?: (response: unknown) => void;
 }
 
+// 백엔드 전송 키포인트 레이아웃
 const PART_COUNT = {
     face: 70,
     pose: 25,
@@ -50,6 +52,7 @@ const TOTAL_COLS = (PART_COUNT.face + PART_COUNT.pose + PART_COUNT.left + PART_C
 type KeypointRow = number[];
 export type KeypointFrames = KeypointRow[];
 
+// 이상치 제거를 위한 p 백분위수 값 반환
 const percentile = (values: number[], p: number): number => {
     if (values.length === 0) return 0;
     const sorted = [...values].sort((a, b) => a - b);
@@ -57,16 +60,19 @@ const percentile = (values: number[], p: number): number => {
     return sorted[pos];
 };
 
+// 키포인트 행 생성을 위한 키포인트 픽셀 좌표 변환
 const asPointForRow = (kp: Keypoint | null | undefined, w: number, h: number): [number, number, number] => {
     if (!kp) return [Number.NaN, Number.NaN, Number.NaN];
     return [kp.x * w, kp.y * h, kp.visibility ?? 1];
 };
 
+// 모션 벡터 생성을 위한 키포인트 픽셀 좌표 변환
 const asPointForMotion = (kp: Keypoint | null | undefined, w: number, h: number): [number, number, number] => {
     if (!kp) return [0, 0, 0];
     return [kp.x * w, kp.y * h, kp.visibility ?? 1];
 };
 
+// 키포인트 벡터 직렬화
 export const extractKeypointRow = (data: OpenPoseData, outW: number, outH: number): KeypointRow => {
     const row: number[] = [];
 
@@ -95,6 +101,7 @@ export const extractKeypointRow = (data: OpenPoseData, outW: number, outH: numbe
     return row.slice(0, TOTAL_COLS);
 };
 
+// 포즈, 얼굴, 손 키포인트가 모두 감지되었는지 확인
 const isFullyDetected = (data: OpenPoseData): boolean => {
     const poseOk = data.pose.length >= PART_COUNT.pose && data.pose.every((p) => !!p);
     const leftOk = data.leftHand.length >= PART_COUNT.left;
@@ -104,6 +111,7 @@ const isFullyDetected = (data: OpenPoseData): boolean => {
     return poseOk && leftOk && rightOk && faceOk;
 };
 
+// 모션 추정에 사용할 포즈, 손 픽셀 좌표 벡터 생성
 const buildMotionVector = (data: OpenPoseData, outW: number, outH: number): [number, number, number][] => {
     const points: [number, number, number][] = [];
 
@@ -120,6 +128,7 @@ const buildMotionVector = (data: OpenPoseData, outW: number, outH: number): [num
     return points;
 };
 
+// 빈 구간 선형 보간 수행
 export const interpolateFrames = (frames: KeypointFrames): KeypointFrames => {
     if (frames.length === 0) return [];
 
@@ -148,9 +157,11 @@ export const interpolateFrames = (frames: KeypointFrames): KeypointFrames => {
         const firstVal = out[firstIdx][col];
         const lastVal = out[lastIdx][col];
 
+        // 유효 구간 밖은 경계값 처리
         for (let r = 0; r < firstIdx; r++) out[r][col] = firstVal;
         for (let r = lastIdx + 1; r < rowCount; r++) out[r][col] = lastVal;
 
+        // 유효 구간 내 선형 보간
         for (let i = 0; i < known.length - 1; i++) {
             const s = known[i];
             const e = known[i + 1];
@@ -165,6 +176,7 @@ export const interpolateFrames = (frames: KeypointFrames): KeypointFrames => {
         }
     }
 
+    // 잔여 빈 값 제거
     for (let r = 0; r < rowCount; r++) {
         for (let c = 0; c < colCount; c++) {
             if (!Number.isFinite(out[r][c])) out[r][c] = 0;
@@ -174,6 +186,7 @@ export const interpolateFrames = (frames: KeypointFrames): KeypointFrames => {
     return out;
 };
 
+// 모션 벡터 간 이동 거리 반환
 const estimateMotionPx = (
     prevPoints: [number, number, number][] | null,
     curPoints: [number, number, number][]
@@ -190,6 +203,7 @@ const estimateMotionPx = (
     return percentile(dists, 0.9);
 };
 
+// 실제 비디오 비율을 고려해 출력 해상도 결정
 export const resolveOutputSize = (
     mode: OutputOrientation,
     videoRef?: React.RefObject<HTMLVideoElement | null>
@@ -203,10 +217,12 @@ export const resolveOutputSize = (
     return LANDSCAPE_SIZE;
 };
 
+// MIME 타입 확인
 const getExtFromMimeType = (mimeType: string): string => {
     return mimeType.includes('mp4') ? 'mp4' : 'webm';
 };
 
+// 브라우저가 지원하는 첫 번째 MIME 타입 반환
 const resolveRecorderMimeType = (): string => {
     for (const mime of MIME_CANDIDATES) {
         if (MediaRecorder.isTypeSupported(mime)) return mime;
@@ -214,6 +230,7 @@ const resolveRecorderMimeType = (): string => {
     return '';
 };
 
+// 비디오 Blob과 키포인트 프레임을 백엔드에 전송
 export const sendToBackend = async (videoBlob: Blob, keypoints: KeypointFrames, videoExt: string) => {
     const formData = new FormData();
     formData.append('video', videoBlob, `sign_video.${videoExt}`);
@@ -231,6 +248,7 @@ export const sendToBackend = async (videoBlob: Blob, keypoints: KeypointFrames, 
     }
 };
 
+// 녹화 관리
 export const useRecorder = ({
     streamRef,
     videoRef,
@@ -242,6 +260,7 @@ export const useRecorder = ({
     const keypointFramesRef = useRef<KeypointFrames>([]);
     const isRecordingRef = useRef(false);
 
+    // 녹화 시작/종료 타이밍 판단용 타임스탬프
     const readySinceRef = useRef<number | null>(null);
     const readyLostSinceRef = useRef<number | null>(null);
     const missingSinceRef = useRef<number | null>(null);
@@ -257,6 +276,7 @@ export const useRecorder = ({
         outputSize: LANDSCAPE_SIZE,
     });
 
+    // 상태가 실제로 변경될 때만 렌더링
     const setPhase = useCallback((phase: RecorderPhase, motionPx?: number) => {
         setStatus((prev) => {
             const nextMotion = motionPx ?? prev.motionPx;
@@ -273,6 +293,7 @@ export const useRecorder = ({
         });
     }, []);
 
+    // 녹화 시작
     const startRecording = useCallback(() => {
         if (isRecordingRef.current || !streamRef.current) return;
 
@@ -290,6 +311,7 @@ export const useRecorder = ({
             if (e.data.size > 0) videoChunksRef.current.push(e.data);
         };
 
+        // 녹화 종료 시 키 포인트 보간 후 백엔드 전송
         recorder.onstop = async () => {
             const videoBlob = new Blob(videoChunksRef.current, { type: finalMimeType });
             const interpolated = interpolateFrames(keypointFramesRef.current);
@@ -306,6 +328,7 @@ export const useRecorder = ({
         console.log('[Recorder] 녹화 시작');
     }, [onBackendResult, setPhase, streamRef]);
 
+    // 녹화 종료
     const stopRecording = useCallback(() => {
         if (!isRecordingRef.current) return;
         mediaRecorderRef.current?.stop();
@@ -314,16 +337,19 @@ export const useRecorder = ({
         console.log('[Recorder] 녹화 종료');
     }, [setPhase]);
 
+    // 준비 상태 초기화
     const resetReadyState = useCallback(() => {
         readySinceRef.current = null;
         readyLostSinceRef.current = null;
     }, []);
 
+    // 매 프레임 호출
     const update = useCallback((keypointsData: OpenPoseData | null) => {
         const now = performance.now() / 1000;
         outputSizeRef.current = resolveOutputSize(outputOrientation, videoRef);
         const [outW, outH] = outputSizeRef.current;
 
+        // 키포인트가 없는 경우 녹화 중이면 소실 타이머 시작
         if (!keypointsData) {
             if (isRecordingRef.current) {
                 if (missingSinceRef.current === null) missingSinceRef.current = now;
@@ -337,6 +363,7 @@ export const useRecorder = ({
 
         missingSinceRef.current = null;
 
+        // 전신 감지 여부에 따라 준비 타이머 관리
         const fullDetected = isFullyDetected(keypointsData);
         if (fullDetected) {
             readyLostSinceRef.current = null;
@@ -348,14 +375,17 @@ export const useRecorder = ({
             }
         }
 
+        // 준비 상태 확인
         const isReady = readySinceRef.current !== null && (now - readySinceRef.current) >= READY_HOLD_SEC;
 
+        // 모션 벡터 및 이동 거리 계산
         const motionPoints = buildMotionVector(keypointsData, outW, outH);
         const motionPx = estimateMotionPx(prevMotionPointsRef.current, motionPoints);
         prevMotionPointsRef.current = motionPoints;
 
         if (!isRecordingRef.current) {
             if (isReady) {
+                // 준비 상태에서 연속 모션 감지 시 녹화 시작
                 if (motionPx >= MOTION_START_THRESHOLD_PX) {
                     movingFramesRef.current += 1;
                 } else {
@@ -373,6 +403,7 @@ export const useRecorder = ({
                 setPhase('idle', motionPx);
             }
         } else {
+            // 녹화 중 정지 지속 시 녹화 종료
             if (motionPx <= MOTION_STOP_THRESHOLD_PX) {
                 if (stillSinceRef.current === null) stillSinceRef.current = now;
                 if (now - stillSinceRef.current >= STILL_STOP_SEC) {
@@ -389,6 +420,7 @@ export const useRecorder = ({
         }
     }, [outputOrientation, resetReadyState, setPhase, startRecording, stopRecording, videoRef]);
 
+    // 녹화 중단
     const stop = useCallback(() => {
         resetReadyState();
         missingSinceRef.current = null;

@@ -18,18 +18,18 @@ import {
 } from '../constants/mediapipeConfig';
 
 export interface Keypoint {
-    x: number;           // 정규화 좌표 (0~1)
+    x: number;              // 정규화 좌표 (0~1)
     y: number;
-    visibility?: number;
+    visibility?: number;    // 신뢰도
 }
 
 export interface OpenPoseData {
-    pose: (Keypoint | null)[];                      // 25개 (OpenPose 기준)
+    pose: (Keypoint | null)[];                  // 25개 (OpenPose 기준)
     poseConnections: [number, number][];
-    leftHand: Keypoint[];                           // 21개
-    rightHand: Keypoint[];                          // 21개
+    leftHand: Keypoint[];                       // 21개
+    rightHand: Keypoint[];                      // 21개
     handConnections: [number, number][];
-    face: Record<string, (Keypoint | null)[]>;      // 파트별 얼굴 키포인트
+    face: Record<string, (Keypoint | null)[]>;  // 파트별 얼굴 키포인트
 }
 
 interface MediaPipeOptions {
@@ -51,6 +51,7 @@ type HandCandidate = {
     sideHint?: HandSide;
 };
 
+// NormalizedLandmark 인덱스를 키포인트로 변환
 const resolveLandmark = (
     landmarks: NormalizedLandmark[],
     index: LandmarkIndex
@@ -76,12 +77,14 @@ const resolveLandmark = (
     return { x: p.x, y: p.y, visibility: p.visibility };
 };
 
+// 포즈 랜드마크를 키포인트 배열로 변환
 const mapPoseLandmarks = (
     landmarks: NormalizedLandmark[]
 ): (Keypoint | null)[] => {
     return POSE_LANDMARK_POINTS.map((index) => resolveLandmark(landmarks, index));
 };
 
+// 얼굴 랜드마크를 파트별로 분류
 const mapFaceLandmarks = (
     landmarks: NormalizedLandmark[]
 ): Record<string, (Keypoint | null)[]> => {
@@ -96,20 +99,23 @@ const mapFaceLandmarks = (
     return result;
 };
 
-// 커스텀 훅
+// 키포인트 간 거리 비교
 const sq = (n: number) => n * n;
 
 const distSq = (a: Keypoint, b: Keypoint): number => {
     return sq(a.x - b.x) + sq(a.y - b.y);
 };
 
+// 손목 키포인트 반환
 const getWrist = (hand: Keypoint[]): Keypoint | null => {
     if (!hand || hand.length === 0) return null;
     return hand[0] ?? null;
 };
 
+// 좌표 클램핑(범위 제한)
 const clamp01 = (v: number): number => Math.min(1, Math.max(0, v));
 
+// 포즈 랜드마크로부터 얼굴 영역(ROI)을 추정
 const buildFaceRoiFromPose = (pose: NormalizedLandmark[]): { x: number; y: number; w: number; h: number } | null => {
     if (!pose || pose.length === 0) return null;
     const nose = pose[0];
@@ -123,16 +129,19 @@ const buildFaceRoiFromPose = (pose: NormalizedLandmark[]): { x: number; y: numbe
     const shoulderDy = lShoulder.y - rShoulder.y;
     const shoulderDist = Math.hypot(shoulderDx, shoulderDy);
 
+    // 귀 감지 실패 시 어깨 너비의 70%로 대체
     let earDist = shoulderDist * 0.7;
     if (lEar && rEar) {
         earDist = Math.hypot(lEar.x - rEar.x, lEar.y - rEar.y);
     }
 
+    // ROI 범위 판단
     const roiW = Math.max(earDist * 1.8, shoulderDist * 0.9, 0.18);
     const roiH = roiW * 1.2;
     const cx = nose.x;
     const cy = nose.y - roiH * 0.08;
 
+    // 경계 클램핑
     const x = clamp01(cx - roiW * 0.5);
     const y = clamp01(cy - roiH * 0.5);
     const w = Math.min(roiW, 1 - x);
@@ -142,6 +151,7 @@ const buildFaceRoiFromPose = (pose: NormalizedLandmark[]): { x: number; y: numbe
     return { x, y, w, h };
 };
 
+// 이전 프레임 손목 위치를 기준으로 좌/우 손 할당을 안정화
 const stabilizeHands = (
     candidates: HandCandidate[],
     prevLeftWrist: Keypoint | null,
@@ -149,28 +159,34 @@ const stabilizeHands = (
 ): { leftHand: Keypoint[]; rightHand: Keypoint[] } => {
     if (candidates.length === 0) return { leftHand: [], rightHand: [] };
 
+    // 후보가 1개인 경우
     if (candidates.length === 1) {
         const c = candidates[0];
         const wrist = getWrist(c.points);
 
+        // 힌트가 존재하는 경우
         if (c.sideHint === 'Left') return { leftHand: c.points, rightHand: [] };
         if (c.sideHint === 'Right') return { leftHand: [], rightHand: c.points };
 
+        // 이전 프레임 손목과의 거리가 더 가까운 쪽
         if (wrist && prevLeftWrist && prevRightWrist) {
             const dL = distSq(wrist, prevLeftWrist);
             const dR = distSq(wrist, prevRightWrist);
             return dL <= dR ? { leftHand: c.points, rightHand: [] } : { leftHand: [], rightHand: c.points };
         }
 
+        // x좌표 기준으로 좌/우 판단
         return wrist && wrist.x <= 0.5 ? { leftHand: c.points, rightHand: [] } : { leftHand: [], rightHand: c.points };
     }
 
+    // 후보가 2개인 경우
     const c0 = candidates[0];
     const c1 = candidates[1];
     const w0 = getWrist(c0.points);
     const w1 = getWrist(c1.points);
     if (!w0 || !w1) return { leftHand: c0.points, rightHand: c1.points };
 
+    // 배치 비용 계산
     const score = (left: HandCandidate, right: HandCandidate): number => {
         let s = 0;
         const lw = getWrist(left.points);
@@ -187,11 +203,13 @@ const stabilizeHands = (
 
     const scoreKeep = score(c0, c1);
     const scoreSwap = score(c1, c0);
+    // 교체 비용이 더 낮으면 스왑
     return scoreSwap < scoreKeep
         ? { leftHand: c1.points, rightHand: c0.points }
         : { leftHand: c0.points, rightHand: c1.points };
 };
 
+// Mediapipe 사용 관리
 export const useMediaPipe = (
     videoRef: React.RefObject<HTMLVideoElement | null>,
     onFrame?: (data: OpenPoseData) => void,
@@ -202,25 +220,37 @@ export const useMediaPipe = (
     detectCurrentFrame: (options?: DetectCurrentFrameOptions) => OpenPoseData | null;
     resetTrackingState: () => void;
 } => {
+    // 키포인트 결과
     const keypointsRef = useRef<OpenPoseData | null>(null);
+
+    // 모델 준비 상태
     const isReadyRef = useRef(false);
     const [isModelReady, setIsModelReady] = useState(false);
+
     const onFrameRef = useRef(onFrame);
+
+    // 이전 프레임 손목 좌표
     const prevLeftWristRef = useRef<Keypoint | null>(null);
     const prevRightWristRef = useRef<Keypoint | null>(null);
+
     const faceCropCanvasRef = useRef<HTMLCanvasElement | null>(null);
+
+    // 추론 타이밍 제어
     const lastInferMsRef = useRef(0);
     const fallbackCountRef = useRef(0);
     const lastLoopErrorLogMsRef = useRef(0);
 
+    // 옵션 파싱
     const stabilizeHandsEnabled = options?.stabilizeHands ?? true;
     const faceZoomFallbackEnabled = options?.faceZoomFallback ?? true;
     const maxFps = options?.maxFps ?? 30;
     const minInferIntervalMs = Math.max(1, Math.floor(1000 / maxFps));
 
+    // 랜드마크 인스턴스
     const poseLandmarkerRef = useRef<PoseLandmarker | null>(null);
     const faceLandmarkerRef = useRef<FaceLandmarker | null>(null);
     const handLandmarkerRef = useRef<HandLandmarker | null>(null);
+
     const animFrameRef = useRef<number | null>(null);
     const lastVideoTimeMapRef = useRef<WeakMap<HTMLVideoElement, number>>(new WeakMap());
 
@@ -228,7 +258,7 @@ export const useMediaPipe = (
         onFrameRef.current = onFrame;
     }, [onFrame]);
 
-    // ── Task 초기화 ──
+    // 랜드마크 태스크 초기화
     useEffect(() => {
         const createLandmarkers = async (delegateName: 'GPU' | 'CPU') => {
             const vision = await FilesetResolver.forVisionTasks(
@@ -297,7 +327,7 @@ export const useMediaPipe = (
             console.error('[useMediaPipe] Task 초기화 실패:', err)
         );
 
-        // 클린업
+        // 언마운트 시 모든 랜드마크 해제
         return () => {
             isReadyRef.current = false;
             setIsModelReady(false);
@@ -308,6 +338,7 @@ export const useMediaPipe = (
         };
     }, []);
 
+    // 단일 프레임에 대해 키포인트 추정을 수행하고 반환
     const detectCurrentFrame = useCallback((options?: DetectCurrentFrameOptions): OpenPoseData | null => {
         try {
             const video = options?.sourceVideo ?? videoRef.current;
@@ -323,6 +354,7 @@ export const useMediaPipe = (
                 return null;
             }
 
+            // 동일 비디오 타임스탬프 재처리 방지
             if (skipDuplicateVideoTime) {
                 const lastVideoTime = lastVideoTimeMapRef.current.get(video);
                 if (lastVideoTime === video.currentTime) {
@@ -330,6 +362,7 @@ export const useMediaPipe = (
                 }
             }
 
+            // FPS 제한 적용
             const nowMs = performance.now();
             if (enforceInterval && nowMs - lastInferMsRef.current < minInferIntervalMs) {
                 return null;
@@ -356,6 +389,8 @@ export const useMediaPipe = (
             ) {
                 try {
                     fallbackCountRef.current += 1;
+
+                    // 프레임마다 한 번만 줌인 재시도
                     const shouldTryFallback = fallbackCountRef.current % 3 === 0;
                     if (shouldTryFallback) {
                         const roi = buildFaceRoiFromPose(rawPose);
@@ -425,6 +460,7 @@ export const useMediaPipe = (
                 });
             }
 
+            // 다음 프레임 안정화를 위해 손목 위치 저장
             prevLeftWristRef.current = getWrist(leftHand);
             prevRightWristRef.current = getWrist(rightHand);
 
@@ -443,6 +479,7 @@ export const useMediaPipe = (
             }
             return result;
         } catch (err) {
+            // 2초에 한 번만 로깅
             const now = performance.now();
             if (now - lastLoopErrorLogMsRef.current > 2000) {
                 lastLoopErrorLogMsRef.current = now;
@@ -452,6 +489,7 @@ export const useMediaPipe = (
         }
     }, [faceZoomFallbackEnabled, stabilizeHandsEnabled, minInferIntervalMs, videoRef]);
 
+    // 트래킹 상태 초기화
     const resetTrackingState = useCallback(() => {
         keypointsRef.current = null;
         prevLeftWristRef.current = null;
