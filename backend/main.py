@@ -17,9 +17,6 @@ from dotenv import load_dotenv
 #env 파일 불러오기
 load_dotenv()
 
-DEBUG_SAVE_DIR = r"./debug_log"
-DEBUG_SAVE_REQUEST_ARTIFACTS = True
-
 # 형태소 추론 신뢰도 설정
 CTC_BLANK_INDEX = 0
 CTC_FRAME_MAX_PROB_THRESHOLD = 0.45
@@ -193,9 +190,6 @@ async def predict(
         if video is None:
             raise ValueError("video is required")
         ext = os.path.splitext(video.filename)[1] or ".webm"
-
-        # 업로드 원본 바이트를 한 번만 읽고, temp/debug 저장에 재사용
-        video_bytes = await video.read()
         
         with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as temp:
             temp.write(video_bytes)
@@ -218,29 +212,7 @@ async def predict(
         keypoints_array = np.asarray(keypoints_list, dtype=np.float32)
         pd.DataFrame(keypoints_array).to_csv(temp_csv, index=False)
 
-        debug_video_path: Optional[str] = None
-        debug_video_224_path: Optional[str] = None
-        debug_keypoint_csv_path: Optional[str] = None
-        
-        #디버그용으로 전달 받은 영상, 키포인트 데이터를 DEBUG_SAVE_DIR에 저장하기 위한 경로 설정
-        if DEBUG_SAVE_REQUEST_ARTIFACTS:
-            os.makedirs(DEBUG_SAVE_DIR, exist_ok=True)
-            stem = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
-            debug_video_path = os.path.join(DEBUG_SAVE_DIR, f"{stem}_orig{ext}")
-            debug_video_224_path = os.path.join(DEBUG_SAVE_DIR, f"{stem}_224.mp4")
-            debug_keypoint_csv_path = os.path.join(DEBUG_SAVE_DIR, f"{stem}.csv")
-            
-            # 원본 비디오 영상 저장
-            with open(debug_video_path, "wb") as f:
-                f.write(video_bytes)
-
-        # 224x224 비디오 저장 및 keypoint 데이터 debug 폴더에 저장
-        if debug_keypoint_csv_path:
-            pd.DataFrame(keypoints_array).to_csv(debug_keypoint_csv_path, index=False)
-
         video_224_path = video_convert_224(temp_video)
-        if debug_video_224_path and video_224_path and os.path.exists(video_224_path):
-            shutil.copy2(str(video_224_path), debug_video_224_path)
 
         # 모델 추론
         video_data, keypoints_data = create_infer_data(str(video_224_path), temp_csv)        
