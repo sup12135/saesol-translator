@@ -36,9 +36,13 @@ c:/Users/유저이름/.conda/envs/환경이름/python.exe main.py
 ```
 
 # 학습 데이터
-AI-HUB의 '수어 영상' 데이터를 이용하여 모델 학습
+AI-HUB의 '수어 영상' 데이터를 이용하여 모델 학습과 직접 촬영한 수어 영상(파인튜닝)을 기반으로 모델 학습을 진행했습니다
 
 # 학습 데이터 가공
 ### 
 dataset/data_processing에 있는 VideoConverter.exe, KeyframeBuilder.exe을 이용하여 1차 가공, exe 코드는 VideoConverter.py, KeyframeBuilder.py 참고    
-dataset/data_processing에 있는 dataset.ipynb을 통해 데이터 셋 만들기
+dataset/data_processing에 있는 dataset.ipynb을 통해 데이터 셋 만들기  
+파인튜닝의 경우, csv 파일을 만들어 작성
+<img width="476" height="203" alt="image" src="https://github.com/user-attachments/assets/2653d4ac-f789-430f-b329-faccd9d5cbdf" />
+video_path, keypoint_path에 각각 224x224 비디오 경로와 키포인트 경로를 저장, morpheme에는 해당 수어 영상에 해당하는 수어 단어 시퀀스를 []에 담아 저장
+
