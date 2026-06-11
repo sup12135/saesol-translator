@@ -7,6 +7,12 @@
 > SSD: WD_BLACK SN850X 1TB  
 > OS: Windows 11  
 
+### NVIDIA의 CUDA를 사용하여 학습  
+https://developer.nvidia.com/cuda-11.2.0-download-archive?target_os=Windows&target_arch=x86_64&target_version=10  
+cuda 11.2.0을 먼저 다운로드 후  
+https://developer.nvidia.com/rdp/cudnn-archive (cuDNN 8.1.1v 다운)
+cudnn 8.1.1v을 cuda 설치 위치에 붙여넣기 (일반적으로 C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.2)
+
 # 사용 방법
 ### anaconda 환경을 이용하여 model.ipynb 파일을 통해 모델 학습
 ```
