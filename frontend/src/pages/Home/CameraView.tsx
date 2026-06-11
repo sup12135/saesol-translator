@@ -1,4 +1,5 @@
 // src/pages/Home/CameraView.tsx
+
 import { useEffect, useRef } from "react";
 import { useCameraStream } from "../../hooks/UseCameraStream";
 
@@ -29,11 +30,14 @@ const CameraView = ({
   onVideoEnded,
   onVideoPlay
 }: CameraViewProps) => {
-  // 커스텀 훅으로 카메라 스트림 로직 주입
+  // 카메라 스트림 획득 및 에러 상태 관리
   const { errorMsg } = useCameraStream({ videoRef, streamRef, isMonitoring, onLoaded });
   const shouldShowError = mode === 'camera' && !!errorMsg;
+  
+  // 마지막 재생 시작 src 추적
   const startedVideoSrcRef = useRef('');
 
+  // 비디오 모드 전환
   useEffect(() => {
     if (mode !== 'video') return;
     const video = videoRef.current;
@@ -82,6 +86,7 @@ const CameraView = ({
       });
   }, [canStartVideo, mode, videoRef, videoSrc]);
 
+  // 현재 상태에 따른 레이블 결정
   const statusLabel = mode === 'camera'
     ? (
       recorderPhase === 'recording'
@@ -102,6 +107,7 @@ const CameraView = ({
               : 'VIDEO READY'
     );
 
+  // 현재 상태에 따른 배지 스타일 결정
   const statusStyle = mode === 'camera'
     ? (
       recorderPhase === 'recording'

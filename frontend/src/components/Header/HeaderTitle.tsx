@@ -1,4 +1,5 @@
 // src/components/Header/HeaderTitle.tsx
+
 import { Link } from 'react-router-dom';
 
 const HeaderTitle = () => {

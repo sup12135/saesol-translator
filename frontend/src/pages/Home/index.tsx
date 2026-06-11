@@ -23,34 +23,26 @@ type BackendPredictResponse = {
 };
 
 function Home() {
+  // UI 상태
   const [showSkeleton, setShowSkeleton] = useState(false);
   const [inputMode, setInputMode] = useState<'camera' | 'video'>('camera');
   const [videoFileUrl, setVideoFileUrl] = useState('');
   const [videoStatus, setVideoStatus] = useState<'idle' | 'playing' | 'sending' | 'done' | 'error'>('idle');
   const [translatedText, setTranslatedText] = useState('번역 준비 완료');
   const [systemMsg, setSystemMsg] = useState('카메라 앞에서 수어를 시작하면 자동으로 인식합니다.');
+  const [subtitleText, setSubtitleText] = useState('');
+  const [isTTSEnabled, setIsTTSEnabled] = useState(true);
 
-  const [subtitleText, setSubtitleText] =
-    useState('');
+  // DOM 참조
+  const videoRef = useRef<HTMLVideoElement>(null);
 
-  const [isTTSEnabled, setIsTTSEnabled] =
-    useState(true);
-
-  // videoRef
-  const videoRef =
-    useRef<HTMLVideoElement>(null);
-
-
-
-
-//merge
-
-  // streamRef 추가, useRecorder에 전달
+  // 인스턴스 변수
   const streamRef = useRef<MediaStream | null>(null);
   const selectedFileRef = useRef<File | null>(null);
   const fileFrameRowsRef = useRef<number[][]>([]);
   const sendingRef = useRef(false);
   
+  // 백엔드 응답을 파싱하여 번역 결과 및 자막을 갱신
   const applyBackendResponse = useCallback((response: unknown, source: 'camera' | 'video') => {
     const res = response as BackendPredictResponse | undefined;
 
@@ -74,7 +66,7 @@ function Home() {
   // 0.2초 최소 보장 로딩 훅
   const { isLoading, handleCameraLoaded } = useHomeLoading(200);
 
-  // useRecorder: streamRef로 녹화, update로 매 프레임 손 감지 여부 전달
+  // 카메라 모드 녹화 및 백엔드 전송 훅
   const { update, stop, status } = useRecorder({
     streamRef,
     videoRef,
@@ -82,6 +74,7 @@ function Home() {
     onBackendResult: (response) => applyBackendResponse(response, 'camera'),
   });
 
+  // 모드에 따른 매 프레임 결과 처리
   const onFrame = useCallback((data: OpenPoseData) => {
     if (inputMode === 'camera') {
       update(data);
@@ -95,13 +88,14 @@ function Home() {
     fileFrameRowsRef.current.push(extractKeypointRow(data, outW, outH));
   }, [inputMode, update, videoRef]);
 
-  // useMediaPipe: onFrame 콜백으로 매 프레임 update 호출
+  // Mediapipe 키포인트 인식 훅
   const { keypointsRef, isModelReady, detectCurrentFrame, resetTrackingState } = useMediaPipe(videoRef, onFrame, {
     stabilizeHands: true,
     faceZoomFallback: true,
     maxFps: 30,
   });
 
+  // 프레임 선형 리샘플링
   const resampleFramesLinear = useCallback((frames: number[][], targetLength: number) => {
     if (frames.length === 0) return [] as number[][];
     if (targetLength <= 0) return [];
@@ -109,22 +103,25 @@ function Home() {
 
     const srcLen = frames.length;
     const colCount = frames[0]?.length ?? 0;
+    // 단일 프레임 또는 열이 없는 경우 복제
     if (srcLen === 1 || colCount === 0) {
       return Array.from({ length: targetLength }, () => [...(frames[0] ?? [])]);
     }
 
     const out: number[][] = [];
     for (let i = 0; i < targetLength; i++) {
+      // 목표 인덱스에 해당하는 원본 위치
       const pos = (i * (srcLen - 1)) / (targetLength - 1);
       const left = Math.floor(pos);
       const right = Math.min(srcLen - 1, Math.ceil(pos));
-      const t = pos - left;
+      const t = pos - left; // 비율
 
       if (left === right) {
         out.push([...frames[left]]);
         continue;
       }
 
+      // 좌우 프레임을 비율 t에 따라 선형 혼합
       const row = new Array<number>(colCount);
       const lrow = frames[left];
       const rrow = frames[right];
@@ -136,23 +133,25 @@ function Home() {
     return out;
   }, []);
 
-  // TTS hook
+  // TTS 재생 훅
   useHomeTTS({
     subtitleText,
     isTTSEnabled,
   });
 
-  // 언마운트
+  // 언마운트 시 녹화 중단
   useEffect(() => {
     return () => stop();
   }, [stop]);
 
+  // 언마운트 시 Object URL 해제
   useEffect(() => {
     return () => {
       if (videoFileUrl) URL.revokeObjectURL(videoFileUrl);
     };
   }, [videoFileUrl]);
 
+  // 입력 모드 전환(카메라, 비디오)
   const onSelectMode = useCallback((mode: 'camera' | 'video') => {
     if (mode === inputMode) return;
     setInputMode(mode);
@@ -163,10 +162,11 @@ function Home() {
     setVideoStatus('idle');
   }, [inputMode, resetTrackingState, stop]);
 
+  // 비디오 파일 선택 처리
   const onVideoFileChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-    // 같은 파일 재선택 시에도 change 이벤트가 다시 발생하도록 value를 즉시 비운다.
+    // 같은 파일 재선택 시에도 change 이벤트가 다시 발생하도록 value를 즉시 비움
     event.target.value = '';
 
     if (videoFileUrl) URL.revokeObjectURL(videoFileUrl);
@@ -183,6 +183,7 @@ function Home() {
     stop();
   }, [resetTrackingState, stop, videoFileUrl]);
 
+  // 비디오 재생 시작
   const onVideoPlay = useCallback(() => {
     resetTrackingState();
     fileFrameRowsRef.current = [];
@@ -190,6 +191,7 @@ function Home() {
     setVideoStatus('playing');
   }, [resetTrackingState]);
 
+  // 비디오 재생 종료 시 백엔드 전송
   const onVideoEnded = useCallback(async () => {
     if (sendingRef.current) return;
     const file = selectedFileRef.current;
@@ -248,7 +250,7 @@ function Home() {
     }
   }, [applyBackendResponse, detectCurrentFrame, resetTrackingState, resampleFramesLinear, videoRef]);
 
-  // 단축키 매핑 (Ctrl + Shift + A)
+  // 스켈레톤 오버레이 단축키 매핑 (Ctrl + Shift + A)
   useShortcut({
     targetKey: 'A',
     requireCtrl: true,

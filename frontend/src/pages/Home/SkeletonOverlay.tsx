@@ -56,6 +56,7 @@ const drawLine = (
   ctx.stroke();
 };
 
+// 정규화 좌표를 캔버스 픽셀 좌표로 변환
 const mapToContain = (
   x: number,
   y: number,
@@ -78,7 +79,7 @@ const mapToContain = (
   };
 };
 
-// Pose 드로잉
+// 포즈 드로잉
 const drawPose = (
   ctx: CanvasRenderingContext2D,
   pose: (Keypoint | null)[],
@@ -88,7 +89,7 @@ const drawPose = (
   srcW: number,
   srcH: number
 ) => {
-  // 연결선 먼저 (점 아래에 깔리도록)
+  // 연결선 드로잉
   connections.forEach(([i1, i2]) => {
     const p1 = pose[i1];
     const p2 = pose[i2];
@@ -98,7 +99,7 @@ const drawPose = (
     drawLine(ctx, m1.x, m1.y, m2.x, m2.y, COLOR.POSE_LINE, LINE_WIDTH.POSE);
   });
 
-  // 관절 점
+  // 관절 점 드로잉
   pose.forEach((kp) => {
     if (!kp) return;
     const m = mapToContain(kp.x, kp.y, srcW, srcH, w, h);
@@ -106,7 +107,7 @@ const drawPose = (
   });
 };
 
-// Face 드로잉
+// 얼굴 드로잉
 const drawFace = (
   ctx: CanvasRenderingContext2D,
   face: Record<string, (Keypoint | null)[]>,
@@ -124,7 +125,7 @@ const drawFace = (
   });
 };
 
-// Hand 드로잉
+// 양손 드로잉
 const drawHand = (
   ctx: CanvasRenderingContext2D,
   hand: Keypoint[],
@@ -136,7 +137,7 @@ const drawHand = (
 ) => {
   if (hand.length === 0) return;
 
-  // 연결선
+  // 연결선 드로잉
   connections.forEach(([i1, i2]) => {
     const p1 = hand[i1];
     const p2 = hand[i2];
@@ -146,13 +147,14 @@ const drawHand = (
     drawLine(ctx, m1.x, m1.y, m2.x, m2.y, COLOR.HAND_LINE, LINE_WIDTH.HAND);
   });
 
-  // 관절 점
+  // 관절 점 드로잉
   hand.forEach((kp) => {
     const m = mapToContain(kp.x, kp.y, srcW, srcH, w, h);
     drawPoint(ctx, m.x, m.y, POINT_RADIUS.HAND, COLOR.HAND_POINT);
   });
 };
 
+// 스켈레톤 오버레이 드로잉
 const SkeletonOverlay = ({ keypointsRef, videoRef, mirrored = true }: SkeletonOverlayProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animFrameRef = useRef<number | null>(null);
